@@ -4,6 +4,6 @@ import sitemap from "@astrojs/sitemap";
 import tailwind from "@astrojs/tailwind";
 
 export default defineConfig({
-  // site: "https://amazing-portfolio.com",
+  site: "https://amazing-portfolio.com",
   integrations: [mdx(), sitemap(), tailwind()],
 });
