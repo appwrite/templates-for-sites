@@ -11,6 +11,10 @@
 
     "esModuleInterop": true,
     "skipLibCheck": true,
+    
+    "paths": {
+      "@assets/*": ["./assets/*"],
+    },
   },
   "exclude": ["dist/"],
 }

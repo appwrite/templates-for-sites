@@ -1,7 +1,6 @@
 import { useState } from "@lynx-js/react";
 import redHeart from "../assets/redHeart.png";
 import whiteHeart from "../assets/whiteHeart.png";
-import "../index.scss";
 
 export default function LikeIcon() {
   const [isLiked, setIsLiked] = useState(false);

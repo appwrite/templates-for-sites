@@ -1,5 +1,4 @@
-import "../index.scss";
-import type { Picture } from "../assets/furnitures/furnituresPictures.jsx";
+import type { Picture } from "../furnituresPictures.jsx";
 import LikeIcon from "./LikeIcon.jsx";
 
 export default function LikeImageCard(props: { picture: Picture }) {
