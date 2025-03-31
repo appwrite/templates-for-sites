@@ -1,0 +1,31 @@
+html{
+    scroll-behavior: smooth;
+}
+
+/* Pink Design theme colors */
+:root {
+    /* Brand Colors */
+    --color-primary-100: 343, 87%, 56%;
+    --color-primary-200: 343, 82%, 48%;
+    --color-primary-300: 343, 90%, 40%;
+
+    /* Neutral Colors */
+    --color-neutral-0: 0, 0%, 100%;
+    --color-neutral-10: 220, 14%, 96%;
+    --color-neutral-20: 220, 13%, 91%;
+    --color-neutral-50: 220, 9%, 46%;
+    --color-neutral-70: 220, 8%, 29%;
+    --color-neutral-90: 220, 9%, 13%;
+    --color-neutral-100: 220, 11%, 9%;
+}
+
+/* Dark theme specific overrides */
+.theme-dark {
+    --color-neutral-0: 220, 11%, 9%;
+    --color-neutral-10: 220, 9%, 13%;
+    --color-neutral-20: 220, 8%, 29%;
+    --color-neutral-50: 220, 9%, 46%;
+    --color-neutral-70: 220, 13%, 91%;
+    --color-neutral-90: 220, 14%, 96%;
+    --color-neutral-100: 0, 0%, 100%;
+}
