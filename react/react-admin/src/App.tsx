@@ -26,11 +26,11 @@ import { themes, ThemeName } from './themes/themes';
 const client = new Client();
 client
     .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
-    .setProject(import.meta.env.VITE_APPWRITE_PROJECTID);
+    .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
 const dataProvider = appWriteDataProvider({
     client,
-    databaseId: import.meta.env.VITE_APPWRITE_DATABASEID,
-    collectionIds: JSON.parse(import.meta.env.VITE_APPWRITE_COLLECTIONIDS),
+    databaseId: import.meta.env.VITE_APPWRITE_DATABASE_ID,
+    collectionIds: JSON.parse(import.meta.env.VITE_APPWRITE_COLLECTION_IDS),
 });
 const authProvider = appWriteAuthProvider({ client });
 

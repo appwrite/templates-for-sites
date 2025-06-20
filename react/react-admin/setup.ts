@@ -17,26 +17,26 @@ const forceSeed = process.argv.includes('--force');
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
-if (!process.env.APPWRITE_SITE_API_ENDPOINT) {
+if (!process.env.VITE_APPWRITE_ENDPOINT) {
     throw new Error(
-        'APPWRITE_SITE_API_ENDPOINT environment variable is not set.'
+        'VITE_APPWRITE_ENDPOINT environment variable is not set.'
     );
 }
-if (!process.env.APPWRITE_SITE_PROJECT_ID) {
+if (!process.env.VITE_APPWRITE_PROJECT_ID) {
     throw new Error(
-        'APPWRITE_SITE_PROJECT_ID environment variable is not set.'
+        'VITE_APPWRITE_PROJECT_ID environment variable is not set.'
     );
 }
-if (!process.env.APPWRITE_SITE_STANDARD_KEY) {
+if (!process.env.VITE_APPWRITE_STANDARD_KEY) {
     throw new Error(
-        'APPWRITE_SITE_STANDARD_KEY environment variable is not set.'
+        'VITE_APPWRITE_STANDARD_KEY environment variable is not set.'
     );
 }
 
 const client = new appwrite.Client()
-    .setEndpoint(process.env.APPWRITE_SITE_API_ENDPOINT)
-    .setProject(process.env.APPWRITE_SITE_PROJECT_ID)
-    .setKey(process.env.APPWRITE_SITE_STANDARD_KEY);
+    .setEndpoint(process.env.VITE_APPWRITE_ENDPOINT)
+    .setProject(process.env.VITE_APPWRITE_PROJECT_ID)
+    .setKey(process.env.VITE_APPWRITE_STANDARD_KEY);
 
 const users = new appwrite.Users(client);
 
