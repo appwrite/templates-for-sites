@@ -4,7 +4,7 @@ This is a demo of the [Appwrite](https://appwrite.io/) adapter for [react-admin]
 
 ## Features
 
-- ⚡ A complete admin dashboard built with React-admin
+- ⚡ A complete admin dashboard built with [React-admin](https://marmelab.com/react-admin/)
 - 💿 Backed by an [Appwrite](https://appwrite.io/) backend
 - ⚙️ Automatic database, collection, and user seeding
 - 🎨 Rich UI components from Material-UI
@@ -19,20 +19,20 @@ Before you begin, ensure you have the following installed:
 ## Quick Start
 
 1. Clone the repository:
-```bash
-git clone https://github.com/marmelab/ra-appwrite.git
-cd ra-appwrite/packages/demo
-```
+   ```bash
+   git clone https://github.com/appwrite/templates-for-sites.git
+   cd react/react-admin
+   ```
 
 2. Install dependencies:
-```bash
-npm install
-# or
-yarn install
-```
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
 
 3. Configure environment variables:
-   - Create a `.env.local` file in the `packages/demo` directory.
+   - Create a `.env.local` file in the `react/react-admin` directory.
    - Add the following environment variables to your `.env.local` file:
    ```env
    APPWRITE_SITE_API_ENDPOINT=https://cloud.appwrite.io/v1
@@ -42,17 +42,17 @@ yarn install
    > To create an API key, go to your Appwrite console, navigate to your project, then "API Keys". Create a new key with `users` and `databases` scopes.
 
 4. Seed the database:
-This command will create the necessary database, collections, and a demo user (`john.doe@marmelab.com`, password: `changeme`).
-```bash
-npm run db-seed
-```
+   This command will create the necessary database, collections, and a demo user (`john.doe@marmelab.com`, password: `changeme`).
+   ```bash
+   npm run db-seed
+   ```
 
 5. Start the development server:
-```bash
-npm run start
-# or
-yarn start
-```
+   ```bash
+   npm run start
+   # or
+   yarn start
+   ```
 
 Your admin panel will be available at `http://localhost:8000`.
 
@@ -60,11 +60,11 @@ Your admin panel will be available at `http://localhost:8000`.
 
 The following environment variables are required:
 
-| Variable | Description | Example |
-|----------|-------------|---------|
+| Variable                   | Description                     | Example                        |
+| -------------------------- | ------------------------------- | ------------------------------ |
 | APPWRITE_SITE_API_ENDPOINT | Your Appwrite project endpoint. | `https://cloud.appwrite.io/v1` |
-| APPWRITE_SITE_PROJECT_ID | Your Appwrite project ID. | `60b8...` |
-| APPWRITE_SITE_STANDARD_KEY | Your Appwrite project API key. | `a0b1...` |
+| APPWRITE_SITE_PROJECT_ID   | Your Appwrite project ID.       | `60b8...`                      |
+| APPWRITE_SITE_STANDARD_KEY | Your Appwrite project API key.  | `a0b1...`                      |
 
 
 ## Project Structure
@@ -95,7 +95,6 @@ react-admin/
 - `npm run start` - Start development server at `http://localhost:8000`
 - `npm run serve` - Preview production build
 - `npm run build` - Build for production
-- `npm run test` - Run tests
 - `npm run lint` - Run ESLint
 - `npm run db-seed` - Seed the Appwrite database
 
