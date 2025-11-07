@@ -81,7 +81,7 @@ export default function Home() {
         {/* Header Section */}
         <div className="text-center mb-12 sm:mb-16">
           <div className="inline-flex items-center justify-center gap-8 mb-6">
-            <a href="https://elevenlabs.io/" target="_blank" className="hover:opacity-80 transition-opacity relative">
+            <a href="https://elevenlabs.io/" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity relative">
               <img 
                 src="/logos/elevenlabs.png" 
                 alt="ElevenLabs" 
@@ -94,7 +94,7 @@ export default function Home() {
               />
             </a>
             <div className="h-8 sm:h-10 w-px bg-slate-300 dark:bg-slate-700"></div>
-            <a href="https://appwrite.io/" target="_blank" className="hover:opacity-80 transition-opacity relative">
+            <a href="https://appwrite.io/" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity relative">
               <img 
                 src="/logos/appwrite.png" 
                 alt="Appwrite" 
