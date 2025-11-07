@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import VoiceDropdown from '@/components/VoiceDropdown';
 import AudioPlayer from '@/components/AudioPlayer';
+import ThemeToggle from '@/components/ThemeToggle';
 
 interface VoiceSettings {
   voice_id: string;
@@ -77,7 +78,10 @@ export default function Home() {
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-purple-400/20 to-pink-400/20 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 max-w-5xl">
+      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 max-w-5xl">
+        <div className="flex justify-end mb-12 sm:absolute sm:right-2 sm:top-4 sm:mt-0 sm:mb-0">
+          <ThemeToggle />
+        </div>
         {/* Header Section */}
         <div className="text-center mb-12 sm:mb-16">
           <div className="inline-flex items-center justify-center gap-8 mb-6">
