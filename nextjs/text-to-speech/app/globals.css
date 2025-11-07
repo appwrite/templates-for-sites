@@ -27,6 +27,23 @@ body {
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
 }
 
+*,
+*::before,
+*::after {
+  transition-property: color, background-color, border-color, fill, stroke, box-shadow;
+  transition-duration: 0.1s;
+  transition-timing-function: ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
