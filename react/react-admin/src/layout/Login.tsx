@@ -13,9 +13,6 @@ const Login = () => {
     const translate = useTranslate();
     return (
         <RaLogin sx={{ background: 'none' }}>
-            <Typography color="text.disabled" textAlign="center">
-                Hint: john.doe@marmelab.com / changeme
-            </Typography>
             <LoginForm>
                 <TextInput
                     autoFocus

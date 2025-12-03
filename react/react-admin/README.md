@@ -5,8 +5,8 @@ This is a demo of the [Appwrite](https://appwrite.io/) adapter for [react-admin]
 ## Features
 
 - ⚡ A complete admin dashboard built with [React-admin](https://marmelab.com/react-admin/)
-- 💿 Backed by an [Appwrite](https://appwrite.io/) backend
-- ⚙️ Automatic database, collection, and user seeding
+- 💿 Backed by an [Appwrite](https://appwrite.io/) backend using TablesDB
+- ⚙️ Automatic database, table, and user seeding
 - 🎨 Rich UI components from Material-UI
 
 ## Prerequisites
@@ -32,17 +32,24 @@ Before you begin, ensure you have the following installed:
    ```
 
 3. Configure environment variables:
-   - Create a `.env.local` file in the `react/react-admin` directory.
-   - Add the following environment variables to your `.env.local` file:
+   - Create a `.env` file in the `react/react-admin` directory.
+   - Add the following environment variables to your `.env` file:
    ```env
-   APPWRITE_SITE_API_ENDPOINT=https://cloud.appwrite.io/v1
-   APPWRITE_SITE_PROJECT_ID=your_project_id_here
-   APPWRITE_SITE_STANDARD_KEY=your_api_key_here
+   VITE_APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
+   VITE_APPWRITE_PROJECT_ID=your_project_id_here
+   VITE_APPWRITE_DATABASE_ID=admin
+   VITE_APPWRITE_COLLECTION_REVIEWS=reviews
+   VITE_APPWRITE_COLLECTION_INVOICES=invoices
+   VITE_APPWRITE_COLLECTION_ORDERS=orders
+   VITE_APPWRITE_COLLECTION_PRODUCTS=products
+   VITE_APPWRITE_COLLECTION_CATEGORIES=categories
+   VITE_APPWRITE_COLLECTION_CUSTOMERS=customers
+   APPWRITE_API_KEY=your_api_key_here
    ```
    > To create an API key, go to your Appwrite console, navigate to your project, then "API Keys". Create a new key with `users` and `databases` scopes.
 
 4. Seed the database:
-   This command will create the necessary database, collections, and a demo user (`john.doe@marmelab.com`, password: `changeme`).
+   This command will create the necessary database, tables, and a demo user (`john.doe@marmelab.com`, password: `changeme`).
    ```bash
    npm run db-seed
    ```
@@ -60,11 +67,18 @@ Your admin panel will be available at `http://localhost:8000`.
 
 The following environment variables are required:
 
-| Variable                   | Description                     | Example                        |
-| -------------------------- | ------------------------------- | ------------------------------ |
-| APPWRITE_SITE_API_ENDPOINT | Your Appwrite project endpoint. | `https://cloud.appwrite.io/v1` |
-| APPWRITE_SITE_PROJECT_ID   | Your Appwrite project ID.       | `60b8...`                      |
-| APPWRITE_SITE_STANDARD_KEY | Your Appwrite project API key.  | `a0b1...`                      |
+| Variable                              | Description                                | Example                        |
+| ------------------------------------- | ------------------------------------------ | ------------------------------ |
+| VITE_APPWRITE_ENDPOINT                | Your Appwrite project endpoint.            | `https://cloud.appwrite.io/v1` |
+| VITE_APPWRITE_PROJECT_ID              | Your Appwrite project ID.                  | `60b8...`                      |
+| VITE_APPWRITE_DATABASE_ID             | Database ID (default: admin).              | `admin`                        |
+| VITE_APPWRITE_COLLECTION_REVIEWS      | Collection ID for reviews table.           | `reviews`                      |
+| VITE_APPWRITE_COLLECTION_INVOICES     | Collection ID for invoices table.          | `invoices`                     |
+| VITE_APPWRITE_COLLECTION_ORDERS       | Collection ID for orders table.            | `orders`                       |
+| VITE_APPWRITE_COLLECTION_PRODUCTS     | Collection ID for products table.          | `products`                     |
+| VITE_APPWRITE_COLLECTION_CATEGORIES   | Collection ID for categories table.        | `categories`                   |
+| VITE_APPWRITE_COLLECTION_CUSTOMERS    | Collection ID for customers table.         | `customers`                    |
+| APPWRITE_API_KEY                      | Your Appwrite API key (for seeding only).  | `a0b1...`                      |
 
 
 ## Project Structure
@@ -84,7 +98,7 @@ react-admin/
 │   ├── themes/          # Custom themes
 │   └── ...
 ├── public/              # Public assets
-├── .env.local           # Environment variables (not in git)
+├── .env                 # Environment variables (not in git)
 ├── setup.ts             # Database seeding script
 ├── package.json         # Project dependencies
 └── README.md            # Project documentation
