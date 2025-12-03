@@ -26,9 +26,7 @@ Before you begin, ensure you have the following installed:
 
 2. Install dependencies:
    ```bash
-   npm install
-   # or
-   yarn install
+   pnpm install
    ```
 
 3. Configure environment variables:
@@ -51,14 +49,12 @@ Before you begin, ensure you have the following installed:
 4. Seed the database:
    This command will create the necessary database, tables, and a demo user (`john.doe@marmelab.com`, password: `changeme`).
    ```bash
-   npm run db-seed
+   pnpm run db-seed
    ```
 
 5. Start the development server:
    ```bash
-   npm run start
-   # or
-   yarn start
+   pnpm run start
    ```
 
 Your admin panel will be available at `http://localhost:8000`.
@@ -72,12 +68,12 @@ The following environment variables are required:
 | VITE_APPWRITE_ENDPOINT                | Your Appwrite project endpoint.            | `https://cloud.appwrite.io/v1` |
 | VITE_APPWRITE_PROJECT_ID              | Your Appwrite project ID.                  | `60b8...`                      |
 | VITE_APPWRITE_DATABASE_ID             | Database ID (default: admin).              | `admin`                        |
-| VITE_APPWRITE_COLLECTION_REVIEWS      | Collection ID for reviews table.           | `reviews`                      |
-| VITE_APPWRITE_COLLECTION_INVOICES     | Collection ID for invoices table.          | `invoices`                     |
-| VITE_APPWRITE_COLLECTION_ORDERS       | Collection ID for orders table.            | `orders`                       |
-| VITE_APPWRITE_COLLECTION_PRODUCTS     | Collection ID for products table.          | `products`                     |
-| VITE_APPWRITE_COLLECTION_CATEGORIES   | Collection ID for categories table.        | `categories`                   |
-| VITE_APPWRITE_COLLECTION_CUSTOMERS    | Collection ID for customers table.         | `customers`                    |
+| VITE_APPWRITE_TABLE_REVIEWS           | Table ID for reviews table.                | `reviews`                      |
+| VITE_APPWRITE_TABLE_INVOICES          | Table ID for invoices table.               | `invoices`                     |
+| VITE_APPWRITE_TABLE_ORDERS            | Table ID for orders table.                 | `orders`                       |
+| VITE_APPWRITE_TABLE_PRODUCTS          | Table ID for products table.               | `products`                     |
+| VITE_APPWRITE_TABLE_CATEGORIES        | Table ID for categories table.             | `categories`                   |
+| VITE_APPWRITE_TABLE_CUSTOMERS         | Table ID for customers table.              | `customers`                    |
 | APPWRITE_API_KEY                      | Your Appwrite API key (for seeding only).  | `a0b1...`                      |
 
 
@@ -106,11 +102,11 @@ react-admin/
 
 ## Available Scripts
 
-- `npm run start` - Start development server at `http://localhost:8000`
-- `npm run serve` - Preview production build
-- `npm run build` - Build for production
-- `npm run lint` - Run ESLint
-- `npm run db-seed` - Seed the Appwrite database
+- `pnpm run start` - Start development server at `http://localhost:8000`
+- `pnpm run serve` - Preview production build
+- `pnpm run build` - Build for production
+- `pnpm run lint` - Run ESLint
+- `pnpm run db-seed` - Seed the Appwrite database
 
 ## Contributing
 
