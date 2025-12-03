@@ -1,33 +1,131 @@
-# React-admin Demo With AppWrite
+# React-admin Demo With Appwrite
 
-This is a demo of the [AppWrite](https://appwrite.io/) adapter for [react-admin](https://github.com/marmelab/react-admin).
+This is a demo of the [Appwrite](https://appwrite.io/) adapter for [react-admin](https://github.com/marmelab/react-admin), a frontend framework for building B2B applications on top of REST/GraphQL APIs.
 
-To explore the source code, start with [src/App.tsx](https://github.com/marmelab/ra-appwrite/blob/main/packages/demo/src/App.tsx).
+## Features
 
-## Requirements
+- ⚡ A complete admin dashboard built with [React-admin](https://marmelab.com/react-admin/)
+- 💿 Backed by an [Appwrite](https://appwrite.io/) backend using TablesDB
+- ⚙️ Automatic database, table, and user seeding
+- 🎨 Rich UI components from Material-UI
 
-To run this demo, you must have configured an **Appwrite project**. You can either use an existing project or create a new one.
+## Prerequisites
 
-This project comes with a script that will create the necessary **database**, **collections** and **users** for you. This script will be run against the Appwrite project you choose in the `.env.local` file.
+Before you begin, ensure you have the following installed:
+- Node.js (v18 or higher recommended)
+- npm or yarn
+- An Appwrite project
 
-## How to run
+## Quick Start
 
-Clone the `ra-appwrite` repository, then copy the `packages/demo/.env.local-example` file to `packages/demo/.env.local` and fill in the appwrite endpoint, project id and API key to use.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/appwrite/templates-for-sites.git
+   cd react/react-admin
+   ```
 
-> To create an API key, go to your Appwrite console, navigate to your project, then "Overview". Scroll down to the "API Keys" section and create a new key with the `users` and `database` scopes.
+2. Install dependencies:
+   ```bash
+   pnpm install
+   ```
 
-Then run the following commands at the root of the repository:
+3. Configure environment variables:
+   - Create a `.env` file in the `react/react-admin` directory.
+   - Add the following environment variables to your `.env` file:
+   ```env
+   VITE_APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
+   VITE_APPWRITE_PROJECT_ID=your_project_id_here
+   VITE_APPWRITE_DATABASE_ID=admin
+   VITE_APPWRITE_COLLECTION_REVIEWS=reviews
+   VITE_APPWRITE_COLLECTION_INVOICES=invoices
+   VITE_APPWRITE_COLLECTION_ORDERS=orders
+   VITE_APPWRITE_COLLECTION_PRODUCTS=products
+   VITE_APPWRITE_COLLECTION_CATEGORIES=categories
+   VITE_APPWRITE_COLLECTION_CUSTOMERS=customers
+   APPWRITE_API_KEY=your_api_key_here
+   ```
+   > To create an API key, go to your Appwrite console, navigate to your project, then "API Keys". Create a new key with `users` and `databases` scopes.
 
-```sh
-# Install dependencies
-make install
+4. Seed the database:
+   This command will create the necessary database, tables, and a demo user (`john.doe@marmelab.com`, password: `changeme`).
+   ```bash
+   pnpm run db-seed
+   ```
 
-# Build the packages
-make build
+5. Start the development server:
+   ```bash
+   pnpm run start
+   ```
 
-# Create the database, collections and users
-make db-seed
+Your admin panel will be available at `http://localhost:8000`.
 
-# Start the demo app
-make run
+## Environment Variables
+
+The following environment variables are required:
+
+| Variable                              | Description                                | Example                        |
+| ------------------------------------- | ------------------------------------------ | ------------------------------ |
+| VITE_APPWRITE_ENDPOINT                | Your Appwrite project endpoint.            | `https://cloud.appwrite.io/v1` |
+| VITE_APPWRITE_PROJECT_ID              | Your Appwrite project ID.                  | `60b8...`                      |
+| VITE_APPWRITE_DATABASE_ID             | Database ID (default: admin).              | `admin`                        |
+| VITE_APPWRITE_TABLE_REVIEWS           | Table ID for reviews table.                | `reviews`                      |
+| VITE_APPWRITE_TABLE_INVOICES          | Table ID for invoices table.               | `invoices`                     |
+| VITE_APPWRITE_TABLE_ORDERS            | Table ID for orders table.                 | `orders`                       |
+| VITE_APPWRITE_TABLE_PRODUCTS          | Table ID for products table.               | `products`                     |
+| VITE_APPWRITE_TABLE_CATEGORIES        | Table ID for categories table.             | `categories`                   |
+| VITE_APPWRITE_TABLE_CUSTOMERS         | Table ID for customers table.              | `customers`                    |
+| APPWRITE_API_KEY                      | Your Appwrite API key (for seeding only).  | `a0b1...`                      |
+
+
+## Project Structure
+
 ```
+react-admin/
+├── src/
+│   ├── App.tsx          # Main application component
+│   ├── dashboard/       # Dashboard components
+│   ├── products/        # Product management views
+│   ├── categories/      # Category management views
+│   ├── visitors/        # Customer management views
+│   ├── orders/          # Order management views
+│   ├── invoices/        # Invoice management views
+│   ├── reviews/         # Review management views
+│   ├── layout/          # App layout components
+│   ├── themes/          # Custom themes
+│   └── ...
+├── public/              # Public assets
+├── .env                 # Environment variables (not in git)
+├── setup.ts             # Database seeding script
+├── package.json         # Project dependencies
+└── README.md            # Project documentation
+```
+
+## Available Scripts
+
+- `pnpm run start` - Start development server at `http://localhost:8000`
+- `pnpm run serve` - Preview production build
+- `pnpm run build` - Build for production
+- `pnpm run lint` - Run ESLint
+- `pnpm run db-seed` - Seed the Appwrite database
+
+## Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License.
+
+## Acknowledgments
+
+- [React](https://reactjs.org/)
+- [Vite](https://vitejs.dev/)
+- [React-admin](https://marmelab.com/react-admin/)
+- [Appwrite](https://appwrite.io/)
+- [Material-UI](https://mui.com/)
