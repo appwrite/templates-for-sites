@@ -46,7 +46,6 @@
         "serve": "vite preview --port 8000",
         "build": "vite build",
         "test": "vite test",
-        "lint": "eslint --fix ./src",
         "db-seed": "tsx setup.ts"
     }
 }
