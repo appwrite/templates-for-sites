@@ -30,7 +30,14 @@ client
 const dataProvider = appWriteDataProvider({
     client,
     databaseId: import.meta.env.VITE_APPWRITE_DATABASE_ID,
-    collectionIds: JSON.parse(import.meta.env.VITE_APPWRITE_COLLECTION_IDS),
+    collectionIds: {
+        reviews: import.meta.env.VITE_APPWRITE_TABLE_REVIEWS,
+        invoices: import.meta.env.VITE_APPWRITE_TABLE_INVOICES,
+        orders: import.meta.env.VITE_APPWRITE_TABLE_ORDERS,
+        products: import.meta.env.VITE_APPWRITE_TABLE_PRODUCTS,
+        categories: import.meta.env.VITE_APPWRITE_TABLE_CATEGORIES,
+        customers: import.meta.env.VITE_APPWRITE_TABLE_CUSTOMERS,
+    },
 });
 const authProvider = appWriteAuthProvider({ client });
 

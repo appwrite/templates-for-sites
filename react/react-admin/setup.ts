@@ -15,26 +15,26 @@ const MAX_ERRORS = 5;
 
 const forceSeed = process.argv.includes("--force");
 
-dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
-if (!process.env.APPWRITE_SITE_API_ENDPOINT) {
+if (!process.env.VITE_APPWRITE_ENDPOINT) {
   throw new Error(
-    "APPWRITE_SITE_API_ENDPOINT environment variable is not set."
+    "VITE_APPWRITE_ENDPOINT environment variable is not set."
   );
 }
-if (!process.env.APPWRITE_SITE_PROJECT_ID) {
-  throw new Error("APPWRITE_SITE_PROJECT_ID environment variable is not set.");
+if (!process.env.VITE_APPWRITE_PROJECT_ID) {
+  throw new Error("VITE_APPWRITE_PROJECT_ID environment variable is not set.");
 }
-if (!process.env.APPWRITE_SITE_STANDARD_KEY) {
+if (!process.env.APPWRITE_API_KEY) {
   throw new Error(
-    "APPWRITE_SITE_STANDARD_KEY environment variable is not set."
+    "APPWRITE_API_KEY environment variable is not set."
   );
 }
 
 const client = new appwrite.Client()
-  .setEndpoint(process.env.APPWRITE_SITE_API_ENDPOINT)
-  .setProject(process.env.APPWRITE_SITE_PROJECT_ID)
-  .setKey(process.env.APPWRITE_SITE_STANDARD_KEY);
+  .setEndpoint(process.env.VITE_APPWRITE_ENDPOINT)
+  .setProject(process.env.VITE_APPWRITE_PROJECT_ID)
+  .setKey(process.env.APPWRITE_API_KEY);
 
 const users = new appwrite.Users(client);
 
@@ -67,14 +67,14 @@ await users.create(
   "John Doe"
 );
 
-const databases = new appwrite.Databases(client);
+const tablesDB = new appwrite.TablesDB(client);
 
-const result = await databases.list([Query.equal("name", ["admin"])]);
+const result = await tablesDB.list([Query.equal("name", ["admin"])]);
 
 if (result.total > 0) {
   if (forceSeed) {
     console.log('Database "admin" already exists. Deleting database...');
-    await databases.delete("admin");
+    await tablesDB.delete("admin");
   } else {
     console.log('Database "admin" already exists. Use --force to recreate it.');
     console.log("Exiting.");
@@ -83,9 +83,9 @@ if (result.total > 0) {
 }
 
 console.log('Creating database "admin"...');
-await databases.create("admin", "admin");
+await tablesDB.create("admin", "admin");
 
-const collections = [
+const tables = [
   "baskets",
   "orders",
   "customers",
@@ -94,9 +94,9 @@ const collections = [
   "invoices",
   "reviews",
 ] as const;
-type CollectionName = (typeof collections)[number];
+type TableName = (typeof tables)[number];
 
-type Attribute = {
+type Column = {
   key: string;
   type: "string" | "integer" | "float" | "boolean" | "date";
   size?: number;
@@ -104,7 +104,7 @@ type Attribute = {
   array?: boolean;
 };
 
-const collectionTypes: Record<CollectionName, Attribute[]> = {
+const tableSchemas: Record<TableName, Column[]> = {
   baskets: [
     { key: "product_id", type: "integer" },
     { key: "quantity", type: "integer" },
@@ -187,9 +187,9 @@ const collectionTypes: Record<CollectionName, Attribute[]> = {
   ],
 };
 
-for (const collectionName of collections) {
-  console.log(`Creating collection "${collectionName}"...`);
-  await databases.createCollection("admin", collectionName, collectionName, [
+for (const tableName of tables) {
+  console.log(`Creating table "${tableName}"...`);
+  await tablesDB.createTable("admin", tableName, tableName, [
     Permission.read(Role.users()),
     Permission.write(Role.users()),
     Permission.update(Role.users()),
@@ -197,75 +197,76 @@ for (const collectionName of collections) {
   ]);
 }
 
-for (const [collectionName, attributes] of Object.entries(collectionTypes)) {
-  console.log(`Creating attributes for collection "${collectionName}"...`);
-  for (const attribute of attributes) {
-    switch (attribute.type) {
+for (const [tableName, columns] of Object.entries(tableSchemas)) {
+  console.log(`Creating columns for table "${tableName}"...`);
+  for (const column of columns) {
+    switch (column.type) {
       case "string":
-        await databases.createStringAttribute(
+        await tablesDB.createStringColumn(
           "admin",
-          collectionName,
-          attribute.key,
-          attribute.size || 255,
-          attribute.required || false,
+          tableName,
+          column.key,
+          column.size || 255,
+          column.required || false,
           undefined,
-          attribute.array || false
+          column.array || false
         );
         break;
       case "integer":
-        await databases.createIntegerAttribute(
+        await tablesDB.createIntegerColumn(
           "admin",
-          collectionName,
-          attribute.key,
-          attribute.required || false,
+          tableName,
+          column.key,
+          column.required || false,
           undefined,
           undefined,
           undefined,
-          attribute.array || false
+          column.array || false
         );
         break;
       case "float":
-        await databases.createFloatAttribute(
+        await tablesDB.createFloatColumn(
           "admin",
-          collectionName,
-          attribute.key,
-          attribute.required || false,
+          tableName,
+          column.key,
+          column.required || false,
           undefined,
           undefined,
           undefined,
-          attribute.array || false
+          column.array || false
         );
         break;
       case "boolean":
-        await databases.createBooleanAttribute(
+        await tablesDB.createBooleanColumn(
           "admin",
-          collectionName,
-          attribute.key,
-          attribute.required || false,
+          tableName,
+          column.key,
+          column.required || false,
           undefined,
-          attribute.array || false
+          column.array || false
         );
         break;
       case "date":
-        await databases.createDatetimeAttribute(
+        await tablesDB.createDatetimeColumn(
           "admin",
-          collectionName,
-          attribute.key,
-          attribute.required || false,
+          tableName,
+          column.key,
+          column.required || false,
           undefined,
-          attribute.array || false
+          column.array || false
         );
         break;
       default:
-        throw new Error(`Unknown attribute type: ${attribute.type}`);
+        throw new Error(`Unknown column type: ${column.type}`);
     }
   }
 }
-// Special case for basket
-await databases.createRelationshipAttribute(
+// Special case for basket - create relationship between orders and baskets
+console.log('Creating relationship between orders and baskets...');
+await tablesDB.createRelationshipColumn(
   "admin", // databaseId
-  "orders", // collectionId
-  "baskets", // relatedCollectionId
+  "orders", // tableId
+  "baskets", // relatedTableId
   RelationshipType.OneToMany, // type
   false, // twoWay (optional)
   "basket", // key (optional)
@@ -274,24 +275,23 @@ await databases.createRelationshipAttribute(
 );
 
 console.log("Generating data...");
-// @ts-expect-error - Dunno why this is necessary, but the import is not recognized
-const data = generateData.default();
+const data = generateData();
 
 // FIXME - Give 10 seconds for the schema to be updated
 // Don't know why this is necessary, but yeah...
 await new Promise((resolve) => setTimeout(resolve, 10000));
 
 let errors = 0;
-for (const collectionName of collections) {
-  if (collectionName === "baskets") {
+for (const tableName of tables) {
+  if (tableName === "baskets") {
     continue;
   }
-  console.log(`Inserting data into collection "${collectionName}"...`);
-  for (const item of data[collectionName]) {
+  console.log(`Inserting data into table "${tableName}"...`);
+  for (const item of data[tableName]) {
     try {
-      await databases.createDocument(
+      await tablesDB.createRow(
         "admin",
-        collectionName,
+        tableName,
         // FIXME: createDocument considers 0 to be an invalid ID
         item.id ? item.id.toString() : ID.unique(),
         item,
@@ -304,7 +304,7 @@ for (const collectionName of collections) {
       );
     } catch (error) {
       console.error(
-        `Error inserting item into collection "${collectionName}":`,
+        `Error inserting item into table "${tableName}":`,
         { error, item }
       );
       errors++;
@@ -316,4 +316,4 @@ for (const collectionName of collections) {
   }
 }
 
-console.log("Database setup completed successfully.");
+console.log("TablesDB setup completed successfully.");
