@@ -197,6 +197,19 @@ for (const tableName of tables) {
   ]);
 }
 
+// Special case for basket - create relationship between orders and baskets
+console.log('Creating relationship between orders and baskets...');
+await tablesDB.createRelationshipColumn(
+  "admin", // databaseId
+  "orders", // tableId
+  "baskets", // relatedTableId
+  RelationshipType.OneToMany, // type
+  false, // twoWay (optional)
+  "basket", // key (optional)
+  undefined, // twoWayKey (optional)
+  RelationMutate.Cascade // onDelete (optional)
+);
+
 for (const [tableName, columns] of Object.entries(tableSchemas)) {
   console.log(`Creating columns for table "${tableName}"...`);
   for (const column of columns) {
@@ -261,24 +274,10 @@ for (const [tableName, columns] of Object.entries(tableSchemas)) {
     }
   }
 }
-// Special case for basket - create relationship between orders and baskets
-console.log('Creating relationship between orders and baskets...');
-await tablesDB.createRelationshipColumn(
-  "admin", // databaseId
-  "orders", // tableId
-  "baskets", // relatedTableId
-  RelationshipType.OneToMany, // type
-  false, // twoWay (optional)
-  "basket", // key (optional)
-  undefined, // twoWayKey (optional)
-  RelationMutate.Cascade // onDelete (optional)
-);
 
 console.log("Generating data...");
 const data = generateData();
 
-// FIXME - Give 10 seconds for the schema to be updated
-// Don't know why this is necessary, but yeah...
 await new Promise((resolve) => setTimeout(resolve, 10000));
 
 let errors = 0;
