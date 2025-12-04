@@ -36,14 +36,13 @@ Before you begin, ensure you have the following installed:
    VITE_APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
    VITE_APPWRITE_PROJECT_ID=your_project_id_here
    VITE_APPWRITE_DATABASE_ID=admin
-   VITE_APPWRITE_COLLECTION_REVIEWS=reviews
-   VITE_APPWRITE_COLLECTION_INVOICES=invoices
-   VITE_APPWRITE_COLLECTION_ORDERS=orders
-   VITE_APPWRITE_COLLECTION_PRODUCTS=products
-   VITE_APPWRITE_COLLECTION_CATEGORIES=categories
-   VITE_APPWRITE_COLLECTION_CUSTOMERS=customers
+   VITE_APPWRITE_TABLE_REVIEWS=reviews
+   VITE_APPWRITE_TABLE_INVOICES=invoices
+   VITE_APPWRITE_TABLE_ORDERS=orders
+   VITE_APPWRITE_TABLE_PRODUCTS=products
+   VITE_APPWRITE_TABLE_CATEGORIES=categories
+   VITE_APPWRITE_TABLE_CUSTOMERS=customers
    APPWRITE_API_KEY=your_api_key_here
-   ```
    > To create an API key, go to your Appwrite console, navigate to your project, then "API Keys". Create a new key with `users` and `databases` scopes.
 
 4. Seed the database:
