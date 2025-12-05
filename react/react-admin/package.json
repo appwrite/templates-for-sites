@@ -45,7 +45,6 @@
         "start": "vite --port 8000",
         "serve": "vite preview --port 8000",
         "build": "vite build",
-        "test": "vite test",
         "db-seed": "tsx setup.ts"
     }
 }
