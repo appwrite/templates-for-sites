@@ -18,9 +18,9 @@ const LinkToRelatedProducts = () => {
             component={Link}
             to={{
                 pathname: '/products',
-                search: queryString.stringify({
+                search: `?${queryString.stringify({
                     filter: JSON.stringify({ category_id: record.id }),
-                }),
+                })}`,
             }}
             sx={{ display: 'inline-flex', alignItems: 'center' }}
         >

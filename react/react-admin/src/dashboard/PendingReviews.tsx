@@ -52,9 +52,9 @@ const PendingReviews = () => {
         <CardWithIcon
             to={{
                 pathname: '/reviews',
-                search: queryString.stringify({
+                search: `?${queryString.stringify({
                     filter: JSON.stringify({ status: 'pending' }),
-                }),
+                })}`,
             }}
             icon={CommentIcon}
             title={translate('pos.dashboard.pending_reviews')}

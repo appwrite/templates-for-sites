@@ -15,9 +15,9 @@ const LinkToRelatedCustomers = ({ segment }: { segment: string }) => {
             component={Link}
             to={{
                 pathname: '/customers',
-                search: queryString.stringify({
+                search: `?${queryString.stringify({
                     filter: JSON.stringify({ groups: segment }),
-                }),
+                })}`,
             }}
             state={{ _scrollToTop: true }}
             sx={{
