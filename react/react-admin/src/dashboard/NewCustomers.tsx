@@ -16,19 +16,18 @@ import { Customer } from '../types';
 const NewCustomers = () => {
     const translate = useTranslate();
 
-    const aMonthAgo = subDays(new Date(), 30);
-    aMonthAgo.setDate(aMonthAgo.getDate() - 30);
-    aMonthAgo.setHours(0);
-    aMonthAgo.setMinutes(0);
-    aMonthAgo.setSeconds(0);
-    aMonthAgo.setMilliseconds(0);
+    const startDate = subDays(new Date(), 60);
+    startDate.setHours(0);
+    startDate.setMinutes(0);
+    startDate.setSeconds(0);
+    startDate.setMilliseconds(0);
 
     return (
         <ListBase
             resource="customers"
             filter={{
                 has_ordered: true,
-                first_seen_gte: aMonthAgo.toISOString(),
+                first_seen_gte: startDate.toISOString(),
             }}
             sort={{ field: 'first_seen', order: 'DESC' }}
             perPage={100}
