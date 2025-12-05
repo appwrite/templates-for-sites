@@ -40,7 +40,7 @@ export const ProductEditDetails = () => (
                 validate={req}
             />
         </Grid>
-        <Grid size={{ xs: 0, sm: 48 }} />
+        <Grid size={{ xs: 0, sm: 4 }} />
         <Grid size={{ xs: 12, sm: 4 }}>
             <NumberInput
                 source="price"
