@@ -89,3 +89,23 @@ jobs:
       - name: Build template
         working-directory: ${{ matrix.template }}
         run: jaspr build
+
+      - name: Serve template
+        working-directory: ${{ matrix.template }}/build/jaspr
+        run: |
+          # Start the server the same way the runtime's helpers/jaspr/server.sh does
+          HOST=0.0.0.0 PORT=3000 ./app &
+          pid=$!
+          for _ in $(seq 1 30); do
+            if curl -fsS -o /dev/null http://127.0.0.1:3000/; then
+              kill $pid
+              exit 0
+            fi
+            if ! kill -0 $pid 2>/dev/null; then
+              echo "Error: Server exited before responding on /"
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "Error: Server did not respond on / within 30 seconds"
+          exit 1
