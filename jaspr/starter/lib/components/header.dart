@@ -54,6 +54,9 @@ class Header extends StatelessComponent {
           css('&:hover').styles(
             backgroundColor: const Color('#0005'),
           ),
+          css('&:focus-visible').styles(
+            outline: Outline(color: Colors.white, style: .solid, width: OutlineWidth(2.px), offset: (-4).px),
+          ),
         ]),
         css('div.active', [
           css('&').styles(position: .relative()),
