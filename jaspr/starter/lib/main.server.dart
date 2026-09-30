@@ -26,6 +26,7 @@ void main() {
   // with the provided parameters and components.
   runApp(Document(
     title: 'starter',
+    lang: 'en',
     styles: [
       // Special import rule to include to another css file.
       css.import('https://fonts.googleapis.com/css?family=Roboto'),
