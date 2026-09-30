@@ -1,53 +1,59 @@
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
-import 'package:jaspr_router/jaspr_router.dart';
 
-import 'components/header.dart';
-import 'pages/about.dart';
-import 'pages/home.dart';
+import 'components/connection_status_view.dart';
+import 'components/getting_started_cards.dart';
+import 'components/logs_panel.dart';
+import 'components/top_platform_view.dart';
+import 'data/models/log.dart';
+import 'data/models/status.dart';
+import 'data/repository/appwrite_repository.dart';
 
 // The main component of your application.
 //
-// By using multi-page routing, this component will only be built on the server during pre-rendering and
-// **not** executed on the client. Instead only the nested [Home] and [About] components will be mounted on the client.
-class App extends StatelessComponent {
+// By using the @client annotation, this component is rendered on the server and then
+// mounted on the client, where the ping button and logs panel become interactive.
+@client
+class App extends StatefulComponent {
   const App({super.key});
 
   @override
-  Component build(BuildContext context) {
-    // This method is rerun every time the component is rebuilt.
-    
-    // Renders a <div class="main"> html element with children.
-    return div(classes: 'main', [
-      const Header(),
-      Router(routes: [
-        Route(path: '/', title: 'Home', builder: (context, state) => const Home()),
-        Route(path: '/about', title: 'About', builder: (context, state) => const About()),
-      ]),
-    ]);
+  State<App> createState() => AppState();
+}
+
+class AppState extends State<App> {
+  final AppwriteRepository _repository = AppwriteRepository();
+  final List<Log> _logs = [];
+  Status _status = Status.idle;
+  bool _showLogs = false;
+
+  Future<void> _sendPing() async {
+    if (_status == Status.loading) return;
+    setState(() => _status = Status.loading);
+
+    final log = await _repository.ping();
+
+    setState(() {
+      _logs.insert(0, log);
+      _status = log.status == 200 ? Status.success : Status.error;
+      _showLogs = true;
+    });
   }
 
-  // Defines the CSS styles for this component.
-  //
-  // By using the @css annotation, these will be rendered automatically to CSS and included in your page.
-  // Must be a variable or getter of type [List<StyleRule>].
-  @css
-  static List<StyleRule> get styles => [
-    css('.main', [
-      // The '&' refers to the parent selector of a nested style rules.
-      css('&').styles(
-        display: .flex,
-        height: 100.vh,
-        flexDirection: .column,
-        flexWrap: .wrap,
+  @override
+  Component build(BuildContext context) {
+    return div(classes: 'page', [
+      main_(classes: 'main checker-background', [
+        TopPlatformView(connected: _status == Status.success),
+        ConnectionStatusView(status: _status, onPing: _sendPing),
+        const GettingStartedCards(),
+      ]),
+      LogsPanel(
+        logs: _logs,
+        projectInfo: _repository.getProjectInfo(),
+        open: _showLogs,
+        onToggle: () => setState(() => _showLogs = !_showLogs),
       ),
-      css('section').styles(
-        display: .flex,
-        flexDirection: .column,
-        justifyContent: .center,
-        alignItems: .center,
-        flex: Flex(grow: 1),
-      ),
-    ]),
-  ];
+    ]);
+  }
 }

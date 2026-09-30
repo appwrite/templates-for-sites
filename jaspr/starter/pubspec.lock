@@ -145,6 +145,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.2"
+  dart_appwrite:
+    dependency: "direct main"
+    description:
+      name: dart_appwrite
+      sha256: af747b22991722115d20df37e3513d309af1c8609ca6e9fae6e01b736e8e530d
+      url: "https://pub.dev"
+    source: hosted
+    version: "29.0.0"
   dart_style:
     dependency: transitive
     description:
@@ -257,14 +265,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.23.5"
-  jaspr_router:
-    dependency: "direct main"
-    description:
-      name: jaspr_router
-      sha256: "5c9347395d75e501f02e79469eb588534ae306db6fa556c8f26421381ac6cba7"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.9.0"
   json_annotation:
     dependency: transitive
     description:

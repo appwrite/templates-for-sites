@@ -25,24 +25,17 @@ void main() {
   // [Document] renders the root document structure (<html>, <head> and <body>)
   // with the provided parameters and components.
   runApp(Document(
-    title: 'starter',
+    title: 'Appwrite + Jaspr',
     lang: 'en',
-    styles: [
-      // Special import rule to include to another css file.
-      css.import('https://fonts.googleapis.com/css?family=Roboto'),
-      // Each style rule takes a valid css selector and a set of styles.
-      // Styles are defined using type-safe css bindings and can be freely chained and nested.
-      css('html, body').styles(
-        width: 100.percent,
-        minHeight: 100.vh,
-        padding: .zero,
-        margin: .zero,
-        fontFamily: const .list([FontFamily('Roboto'), FontFamilies.sansSerif]),
+    head: [
+      link(rel: 'icon', type: 'image/svg+xml', href: 'images/appwrite.svg'),
+      link(rel: 'preconnect', href: 'https://fonts.googleapis.com'),
+      link(rel: 'preconnect', href: 'https://fonts.gstatic.com', attributes: {'crossorigin': ''}),
+      link(
+        rel: 'stylesheet',
+        href: 'https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:opsz,wght@14..32,100..900&family=Poppins:wght@300;400&display=swap',
       ),
-      css('h1').styles(
-        margin: .unset,
-        fontSize: 4.rem,
-      ),
+      link(rel: 'stylesheet', href: 'styles.css'),
     ],
     body: App(),
   ));
