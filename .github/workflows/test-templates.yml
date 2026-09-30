@@ -97,7 +97,7 @@ jobs:
           HOST=0.0.0.0 PORT=3000 ./app &
           pid=$!
           for _ in $(seq 1 30); do
-            if curl -fsS -o /dev/null http://127.0.0.1:3000/; then
+            if curl -fsS --max-time 2 -o /dev/null http://127.0.0.1:3000/; then
               kill $pid
               exit 0
             fi
@@ -107,5 +107,5 @@ jobs:
             fi
             sleep 1
           done
-          echo "Error: Server did not respond on / within 30 seconds"
+          echo "Error: Server did not respond on / after 30 attempts"
           exit 1
