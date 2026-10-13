@@ -12,18 +12,17 @@
     "check": "biome check"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.0.6",
+    "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "^0.10.13",
-    "@tanstack/react-router": "^1.170.41",
+    "@tanstack/react-router": "^1.170.44",
     "@tanstack/react-router-devtools": "^1.167.2",
     "@tanstack/react-router-ssr-query": "^1.167.3",
-    "@tanstack/react-start": "^1.168.60",
-    "@tanstack/router-plugin": "^1.168.42",
+    "@tanstack/react-start": "^1.169.1",
+    "@tanstack/router-plugin": "^1.168.45",
     "lucide-react": "^0.544.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "tailwindcss": "^4.0.6",
-    "vite-tsconfig-paths": "^5.1.4"
+    "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.4",
@@ -32,11 +31,11 @@
     "@types/node": "^22.10.2",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
-    "@vitejs/plugin-react": "^5.0.4",
+    "@vitejs/plugin-react": "^6.1.2",
     "jsdom": "^27.0.0",
     "typescript": "^5.7.2",
-    "vite": "^7.1.7",
-    "vitest": "^3.0.5",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4",
     "web-vitals": "^5.1.0"
   }
 }
