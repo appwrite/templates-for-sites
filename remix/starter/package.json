@@ -4,22 +4,26 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "build": "remix vite:build",
-    "dev": "remix vite:dev",
+    "build": "react-router build",
+    "dev": "react-router dev",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
-    "start": "remix-serve ./build/server/index.js",
-    "typecheck": "tsc"
+    "start": "react-router-serve ./build/server/index.js",
+    "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
-    "@remix-run/node": "^2.17.5",
-    "@remix-run/react": "^2.17.5",
-    "@remix-run/serve": "^2.17.5",
+    "@react-router/node": "^7.18.4",
+    "@react-router/serve": "^7.18.4",
+    "@remix-run/express": "npm:@react-router/express@^7.18.4",
+    "express": "^4.22.3",
     "isbot": "^4.1.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-router": "^7.18.4"
   },
   "devDependencies": {
-    "@remix-run/dev": "^2.17.5",
+    "@react-router/dev": "^7.18.4",
+    "@react-router/fs-routes": "^7.18.4",
+    "@types/node": "^20.19.43",
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",
     "@typescript-eslint/eslint-plugin": "^8.72.0",
@@ -41,11 +45,6 @@
     "node": ">=20.0.0"
   },
   "overrides": {
-    "esbuild": "^0.25.12",
-    "estree-util-value-to-estree": "^3.3.3",
-    "postcss-selector-parser": "^7.1.7",
-    "tar": "^7.5.22",
-    "toml": "^4.1.2",
-    "vite": "$vite"
+    "postcss-selector-parser": "^7.1.7"
   }
 }
