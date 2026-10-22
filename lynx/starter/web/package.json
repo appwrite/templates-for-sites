@@ -9,8 +9,8 @@
     "preview": "rsbuild preview"
   },
   "dependencies": {
-    "@lynx-js/web-core": "^0.9.1",
-    "@lynx-js/web-elements": "^0.5.1",
+    "@lynx-js/web-core": "^0.26.3",
+    "@lynx-js/web-elements": "^0.12.13",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
