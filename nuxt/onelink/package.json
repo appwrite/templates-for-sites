@@ -14,7 +14,7 @@
     "@vueuse/core": "^9.13.0",
     "@vueuse/nuxt": "^9.13.0",
     "nuxt": "^3.21.11",
-    "nuxt-icon": "^0.2.11"
+    "nuxt-icon": "^0.6.10"
   },
   "dependencies": {
     "@headlessui/vue": "^1.7.23",

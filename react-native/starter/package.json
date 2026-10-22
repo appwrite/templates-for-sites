@@ -29,8 +29,8 @@
     "expo-symbols": "~58.0.4",
     "expo-system-ui": "~58.0.6",
     "expo-web-browser": "~58.0.6",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "react-native": "0.88.0",
     "react-native-gesture-handler": "~3.3.0",
     "react-native-reanimated": "4.7.1",
@@ -47,7 +47,7 @@
     "@types/react-test-renderer": "^19.3.0",
     "jest": "~30.5.2",
     "jest-expo": "~58.0.12",
-    "react-test-renderer": "19.3.0",
+    "react-test-renderer": "19.3.1",
     "typescript": "~6.0.3"
   },
   "engines": {
