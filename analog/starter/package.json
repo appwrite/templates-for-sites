@@ -48,5 +48,10 @@
     "vite": "^6.4.5",
     "vite-tsconfig-paths": "^4.2.0",
     "vitest": "^4.1.12"
+  },
+  "overrides": {
+    "js-yaml@3": {
+      "argparse": "^2.0.1"
+    }
   }
 }
