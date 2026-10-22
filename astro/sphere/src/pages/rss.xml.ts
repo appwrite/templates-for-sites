@@ -22,9 +22,9 @@ export async function GET(context: Context) {
       title: item.data.title,
       description: item.data.summary,
       pubDate: item.data.date,
-      link: item.slug.startsWith("blog")
-        ? `/blog/${item.slug}/`
-        : `/projects/${item.slug}/`,
+      link: item.id.startsWith("blog")
+        ? `/blog/${item.id}/`
+        : `/projects/${item.id}/`,
     })),
   })
 }
