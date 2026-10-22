@@ -4,7 +4,7 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 
 ## Get started
 
-1. Install dependencies
+1. Install dependencies with Node.js 22.13+, 24.3+ or 26+ (see `engines` in `package.json`)
 
    ```bash
    npm install
