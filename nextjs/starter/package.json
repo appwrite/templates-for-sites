@@ -9,8 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "next": "^15.0.5",
+    "next": "^15.5.28",
     "react": "^19.0.1",
     "react-dom": "^19.0.1"
+  },
+  "overrides": {
+    "postcss": "^8.5.23"
   }
 }

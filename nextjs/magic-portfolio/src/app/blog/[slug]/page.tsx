@@ -8,9 +8,9 @@ import { formatDate } from "@/app/utils/formatDate";
 import ScrollToHash from "@/components/ScrollToHash";
 
 interface BlogParams {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
@@ -20,7 +20,8 @@ export async function generateStaticParams(): Promise<{ slug: string }[]> {
   }));
 }
 
-export function generateMetadata({ params: { slug } }: BlogParams) {
+export async function generateMetadata({ params }: BlogParams) {
+  const { slug } = await params;
   let post = getPosts(["src", "app", "blog", "posts"]).find((post) => post.slug === slug);
 
   if (!post) {
@@ -61,8 +62,9 @@ export function generateMetadata({ params: { slug } }: BlogParams) {
   };
 }
 
-export default function Blog({ params }: BlogParams) {
-  let post = getPosts(["src", "app", "blog", "posts"]).find((post) => post.slug === params.slug);
+export default async function Blog({ params }: BlogParams) {
+  const { slug } = await params;
+  let post = getPosts(["src", "app", "blog", "posts"]).find((post) => post.slug === slug);
 
   if (!post) {
     notFound();

@@ -1,4 +1,4 @@
-import defaultTheme from "tailwindcss/defaultTheme"
+import typography from "@tailwindcss/typography"
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        "sans": ["Atkinson", ...defaultTheme.fontFamily.sans],
+        "sans": ["Atkinson", "ui-sans-serif", "system-ui", "sans-serif", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"],
       },
       typography: {
         DEFAULT: {
@@ -57,5 +57,5 @@ export default {
       },
     },
   },
-  plugins: [require("@tailwindcss/typography")],
+  plugins: [typography],
 }

@@ -10,11 +10,11 @@ const { size } = Astro.props;
 
 <div class={cn(
   "w-full h-full mx-auto px-5",
-  size === "sm" && "max-w-screen-sm",
-  size === "md" && "max-w-screen-md",
-  size === "lg" && "max-w-screen-lg",
-  size === "xl" && "max-w-screen-xl",
-  size === "2xl" && "max-w-screen-2xl",
+  size === "sm" && "max-w-(--breakpoint-sm)",
+  size === "md" && "max-w-(--breakpoint-md)",
+  size === "lg" && "max-w-(--breakpoint-lg)",
+  size === "xl" && "max-w-(--breakpoint-xl)",
+  size === "2xl" && "max-w-(--breakpoint-2xl)",
 )}>
   <slot/>
 </div>

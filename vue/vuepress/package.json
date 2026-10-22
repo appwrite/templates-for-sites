@@ -14,6 +14,30 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "vuepress": "^1.5.3"
+    "qs": "^6.16.1",
+    "vuepress": "^1.9.10"
+  },
+  "overrides": {
+    "@types/markdown-it": {
+      "highlight.js": "^10.4.1"
+    },
+    "@types/webpack-dev-server": {
+      "http-proxy-middleware": "^2.0.10"
+    },
+    "argparse": "^2.0.1",
+    "braces": "^3.0.3",
+    "esbuild": "^0.25.12",
+    "form-data": "^2.5.6",
+    "linkify-it": "^5.0.2",
+    "node-forge": "^1.4.0",
+    "package-json": "^7.0.0",
+    "postcss-selector-parser": "^7.1.7",
+    "qs": "$qs",
+    "serialize-javascript": "^7.0.5",
+    "toml": "^4.1.2",
+    "tough-cookie": "^4.1.3",
+    "vuepress-html-webpack-plugin": {
+      "loader-utils": "^1.4.2"
+    }
   }
 }

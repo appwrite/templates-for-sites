@@ -1,5 +1,5 @@
 ---
-import { type CollectionEntry, getCollection } from "astro:content"
+import { type CollectionEntry, getCollection, render } from "astro:content"
 import PageLayout from "@layouts/PageLayout.astro"
 import TopLayout from "@layouts/TopLayout.astro"
 import BottomLayout from "@layouts/BottomLayout.astro"
@@ -10,7 +10,7 @@ import { SITE } from "@consts"
 export async function getStaticPaths() {
 	const docs = await getCollection("legal")
 	return docs.map((doc) => ({
-		params: { slug: doc.slug },
+		params: { slug: doc.id },
 		props: doc,
 	}))
 }
@@ -19,7 +19,7 @@ export async function getStaticPaths() {
 type Props = CollectionEntry<"legal">;
 const doc = Astro.props
 const { title, date } = doc.data
-const { Content } = await doc.render();
+const { Content } = await render(doc);
 
 ---
 

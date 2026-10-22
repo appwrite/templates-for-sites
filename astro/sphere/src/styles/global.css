@@ -1,9 +1,21 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
-:root{
-  --copy-btn-margin:10px;
+@config '../../tailwind.config.mjs';
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@layer utilities {
+  :root {
+    --copy-btn-margin: 10px;
+  }
 }
 
 @layer base {
@@ -64,7 +76,7 @@ header:not(.scrolled) {
 header.scrolled {
   @apply bg-white/75 dark:bg-black/50;
   @apply border-black/10 dark:border-white/25;
-  @apply backdrop-blur-sm saturate-200;
+  @apply backdrop-blur-xs saturate-200;
 }
 
 article {
@@ -134,7 +146,7 @@ article img {
 #meteors .meteor {
   @apply animate-meteor; /* defined in tailwind.config */
   @apply absolute top-1/2 left-1/2 w-px h-[75vh];
-  @apply bg-gradient-to-b from-white to-transparent;
+  @apply bg-linear-to-b from-white to-transparent;
 }
 
 #meteors .shower.ur {

@@ -1,5 +1,5 @@
 ---
-import { getCollection } from "astro:content"
+import { getCollection, render } from "astro:content"
 import PageLayout from "@layouts/PageLayout.astro"
 import TopLayout from "@layouts/TopLayout.astro"
 import BottomLayout from "@layouts/BottomLayout.astro"
@@ -11,7 +11,7 @@ collection.sort((a, b) => new Date(b.data.dateStart).getTime() - new Date(a.data
 
 const work = await Promise.all(
   collection.map(async (item) => {
-    const { Content } = await item.render()
+    const { Content } = await render(item)
     return { ...item, Content }
   })
 )

@@ -15,7 +15,7 @@
     "@appwrite.io/pink": "^1.0.0",
     "@appwrite.io/pink-icons": "^1.0.0",
     "@react-three/fiber": "^8.2.1",
-    "next": "^15.2.6",
+    "next": "^15.5.28",
     "next-seo": "^5.5.0",
     "nextjs-google-analytics": "^2.0.0",
     "react": "18.2.0",
@@ -32,5 +32,8 @@
     "eslint": "8.19.0",
     "eslint-config-next": "12.2.2",
     "prettier": "^2.7.1"
+  },
+  "overrides": {
+    "postcss": "^8.5.23"
   }
 }
