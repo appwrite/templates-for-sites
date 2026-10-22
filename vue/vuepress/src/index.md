@@ -2,8 +2,10 @@
 home: true
 heroImage: https://v1.vuepress.vuejs.org/hero.png
 tagline: 
-actionText: Quick Start →
-actionLink: /guide/
+actions:
+- text: Quick Start →
+  link: /guide/
+  type: primary
 features:
 - title: Feature 1 Title
   details: Feature 1 Description

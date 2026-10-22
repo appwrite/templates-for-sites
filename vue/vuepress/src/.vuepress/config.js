@@ -1,19 +1,27 @@
-const { description } = require('../../package')
+import { viteBundler } from '@vuepress/bundler-vite'
+import { registerComponentsPlugin } from '@vuepress/plugin-register-components'
+import { searchPlugin } from '@vuepress/plugin-search'
+import { defaultTheme } from '@vuepress/theme-default'
+import { defineUserConfig } from 'vuepress'
+import { getDirname, path } from 'vuepress/utils'
+import packageJson from '../../package.json' with { type: 'json' }
 
-module.exports = {
+const __dirname = getDirname(import.meta.url)
+
+export default defineUserConfig({
   /**
-   * Ref：https://v1.vuepress.vuejs.org/config/#title
+   * Ref：https://vuepress.vuejs.org/reference/config.html#title
    */
   title: 'Vuepress Docs Boilerplate',
   /**
-   * Ref：https://v1.vuepress.vuejs.org/config/#description
+   * Ref：https://vuepress.vuejs.org/reference/config.html#description
    */
-  description: description,
+  description: packageJson.description,
 
   /**
    * Extra tags to be injected to the page HTML `<head>`
    *
-   * ref：https://v1.vuepress.vuejs.org/config/#head
+   * ref：https://vuepress.vuejs.org/reference/config.html#head
    */
   head: [
     ['meta', { name: 'theme-color', content: '#3eaf7c' }],
@@ -21,18 +29,21 @@ module.exports = {
     ['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black' }]
   ],
 
+  bundler: viteBundler(),
+
   /**
    * Theme configuration, here is the default theme configuration for VuePress.
+   * It already includes the back-to-top and medium-zoom plugins.
    *
-   * ref：https://v1.vuepress.vuejs.org/theme/default-theme-config.html
+   * ref：https://ecosystem.vuejs.press/themes/default/config.html
    */
-  themeConfig: {
+  theme: defaultTheme({
     repo: '',
-    editLinks: false,
+    editLink: false,
     docsDir: '',
-    editLinkText: '',
     lastUpdated: false,
-    nav: [
+    contributors: false,
+    navbar: [
       {
         text: 'Guide',
         link: '/guide/',
@@ -43,28 +54,30 @@ module.exports = {
       },
       {
         text: 'VuePress',
-        link: 'https://v1.vuepress.vuejs.org'
+        link: 'https://vuepress.vuejs.org'
       }
     ],
     sidebar: {
       '/guide/': [
         {
-          title: 'Guide',
-          collapsable: false,
+          text: 'Guide',
+          collapsible: false,
           children: [
-            '',
-            'using-vue',
+            '/guide/',
+            '/guide/using-vue.md',
           ]
         }
       ],
     }
-  },
+  }),
 
   /**
-   * Apply plugins，ref：https://v1.vuepress.vuejs.org/zh/plugin/
+   * Apply plugins，ref：https://ecosystem.vuejs.press/plugins/
    */
   plugins: [
-    '@vuepress/plugin-back-to-top',
-    '@vuepress/plugin-medium-zoom',
+    registerComponentsPlugin({
+      componentsDir: path.resolve(__dirname, './components'),
+    }),
+    searchPlugin(),
   ]
-}
+})
