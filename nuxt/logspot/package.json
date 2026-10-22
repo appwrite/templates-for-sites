@@ -11,7 +11,7 @@
     "@nuxtjs/tailwindcss": "^6.14.0",
     "@tailwindcss/typography": "^0.5.20",
     "nuxt": "^3.21.11",
-    "nuxt-icon": "^0.2.11"
+    "nuxt-icon": "^0.6.10"
   },
   "resolutions": {
     "@nuxtjs/mdc": "^0.22.2",
