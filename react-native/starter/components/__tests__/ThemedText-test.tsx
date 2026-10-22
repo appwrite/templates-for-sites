@@ -1,10 +1,13 @@
 import * as React from 'react';
-import renderer from 'react-test-renderer';
+import renderer, { act, ReactTestRenderer } from 'react-test-renderer';
 
 import { ThemedText } from '../ThemedText';
 
-it(`renders correctly`, () => {
-  const tree = renderer.create(<ThemedText>Snapshot test!</ThemedText>).toJSON();
+it(`renders correctly`, async () => {
+  let root: ReactTestRenderer | undefined;
+  await act(async () => {
+    root = renderer.create(<ThemedText>Snapshot test!</ThemedText>);
+  });
 
-  expect(tree).toMatchSnapshot();
+  expect(root?.toJSON()).toMatchSnapshot();
 });
