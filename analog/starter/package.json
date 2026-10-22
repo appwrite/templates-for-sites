@@ -40,8 +40,8 @@
     "@analogjs/platform": "^2.9.1",
     "@analogjs/vite-plugin-angular": "^2.9.1",
     "@analogjs/vitest-angular": "^2.9.1",
-    "@angular/build": "^21.2.27",
-    "@angular/cli": "^21.2.27",
+    "@angular/build": "^21.2.28",
+    "@angular/cli": "^21.2.28",
     "@angular/compiler-cli": "^21.2.25",
     "jsdom": "^22.0.0",
     "typescript": "~5.9.3",
@@ -52,6 +52,9 @@
   "overrides": {
     "js-yaml@3": {
       "argparse": "^2.0.1"
+    },
+    "@analogjs/vite-plugin-nitro": {
+      "esbuild": "^0.28.1"
     }
   }
 }
