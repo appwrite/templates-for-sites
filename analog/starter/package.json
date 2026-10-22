@@ -40,7 +40,7 @@
     "@analogjs/platform": "^2.9.1",
     "@analogjs/vite-plugin-angular": "^2.9.1",
     "@analogjs/vitest-angular": "^2.9.1",
-    "@angular/build": "^21.2.28",
+    "@angular/build": "^22.2.2",
     "@angular/cli": "^21.2.28",
     "@angular/compiler-cli": "^21.2.25",
     "jsdom": "^22.0.0",
