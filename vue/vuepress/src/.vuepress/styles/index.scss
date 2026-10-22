@@ -1,0 +1,16 @@
+/**
+ * Custom Styles here.
+ *
+ * ref：https://ecosystem.vuejs.press/themes/default/styles.html
+ */
+
+html:not([data-theme='dark']) {
+  --vp-c-accent-bg: #3eaf7c;
+  --vp-c-text: #2c3e50;
+  --vp-c-divider: #eaecef;
+  --vp-c-border: #eaecef;
+}
+
+.vp-hero-image {
+  max-width: 450px !important;
+}
