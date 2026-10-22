@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     mainFields: ['module'],
   },
-  plugins: [analog({ vite: { experimental: { supportAnalogFormat: true } } })],
+  plugins: [analog()],
   test: {
     globals: true,
     environment: 'jsdom',
