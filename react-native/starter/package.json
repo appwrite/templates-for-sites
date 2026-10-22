@@ -53,5 +53,10 @@
   "engines": {
     "node": "^22.13.0 || ^24.3.0 || >=26.0.0"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "js-yaml@3": {
+      "argparse": "^2.0.1"
+    }
+  }
 }
