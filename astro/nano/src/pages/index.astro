@@ -1,5 +1,5 @@
 ---
-import { getCollection } from "astro:content";
+import { getCollection, render } from "astro:content";
 import Container from "@components/Container.astro";
 import PageLayout from "@layouts/PageLayout.astro";
 import ArrowCard from "@components/ArrowCard.astro";
@@ -23,7 +23,7 @@ const allwork = (await getCollection("work"))
 
 const work = await Promise.all(
   allwork.map(async (item) => {
-    const { Content } = await item.render();
+    const { Content } = await render(item);
     return { ...item, Content };
   })
 );
