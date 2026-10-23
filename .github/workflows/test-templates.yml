@@ -64,7 +64,19 @@ jobs:
 
       - name: Build template
         working-directory: ${{ matrix.template }}
-        run: npm run build --if-present
+        run: |
+          if [ "${{ matrix.template }}" = "vite/vitepress" ]; then
+            npm run docs:build
+          else
+            npm run build --if-present
+          fi
+
+      - name: Build Lynx web wrapper
+        if: startsWith(matrix.template, 'lynx/')
+        working-directory: ${{ matrix.template }}
+        run: |
+          npm install --prefix web
+          npm run build --prefix web
 
   test-jaspr-template:
     name: Test ${{ matrix.template }}
