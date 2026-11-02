@@ -20,7 +20,7 @@ import {
     useIsDataLoaded,
 } from 'react-admin';
 
-import queryString from 'query-string';
+import { stringify } from 'query-string';
 
 import CardWithIcon from './CardWithIcon';
 import StarRatingField from '../reviews/StarRatingField';
@@ -52,7 +52,7 @@ const PendingReviews = () => {
         <CardWithIcon
             to={{
                 pathname: '/reviews',
-                search: `?${queryString.stringify({
+                search: `?${stringify({
                     filter: JSON.stringify({ status: 'pending' }),
                 })}`,
             }}

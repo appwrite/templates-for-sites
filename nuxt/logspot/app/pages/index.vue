@@ -13,7 +13,7 @@
 </template>
 
 <script setup>
-import seoConfig from "../seoConfig/index";
+import seoConfig from "../../seoConfig/index";
 useHead({
   title: seoConfig.title,
   meta: [

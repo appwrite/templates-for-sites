@@ -1,5 +1,5 @@
 ---
-Build and Ship Nuxt 3 fullstack starter apps with Auth, DB, Payments, Email & File storage 
+Build and Ship Nuxt 4 fullstack starter apps with Auth, DB, Payments, Email & File storage 
 
 Try [Supersaas today](https://supersaas.dev)
 ---

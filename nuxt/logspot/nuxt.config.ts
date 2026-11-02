@@ -1,5 +1,5 @@
 export default ({
-    modules: ['@nuxtjs/tailwindcss', '@nuxt/content', 'nuxt-icon'],
+    modules: ['@nuxtjs/tailwindcss', '@nuxt/content', '@nuxt/icon'],
     content: {
         highlight: {
             theme: 'nord',

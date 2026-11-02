@@ -46,5 +46,8 @@
         "serve": "vite preview --port 8000",
         "build": "vite build",
         "db-seed": "tsx setup.ts"
+    },
+    "overrides": {
+        "query-string@7": "^9.3.1"
     }
 }
