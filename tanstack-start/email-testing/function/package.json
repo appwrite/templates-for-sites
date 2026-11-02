@@ -1,0 +1,9 @@
+{
+  "name": "catchall-inbox-function",
+  "private": true,
+  "type": "module",
+  "main": "src/main.js",
+  "dependencies": {
+    "node-appwrite": "^31.1.0"
+  }
+}
