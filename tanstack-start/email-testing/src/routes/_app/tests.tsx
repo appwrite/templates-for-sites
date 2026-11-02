@@ -3,7 +3,7 @@ import { type FormEvent, type ReactNode, useState } from "react";
 import { CopyButton } from "#/components/copy-button";
 import { Icon, Spinner } from "#/components/icons";
 import { addToken, deleteToken, fetchTokens } from "#/functions/settings";
-import { daysLeft, relativeTime, shortDate } from "#/lib/format";
+import { ago, daysLeft, shortDate } from "#/lib/format";
 
 export const Route = createFileRoute("/_app/tests")({
 	loader: () => fetchTokens(),
@@ -104,13 +104,10 @@ function TestsPage() {
 												</span>
 											</span>
 											<span className="text-right text-[13px] leading-[18px] text-graphite">
-												<span className="block">
+												<span className="block" suppressHydrationWarning>
 													{t.lastUsedAt
-														? `Used ${relativeTime(t.lastUsedAt)} ago`.replace(
-																"now ago",
-																"just now",
-															)
-														: `Created ${relativeTime(t.createdAt) === "now" ? "just now" : `${relativeTime(t.createdAt)} ago`}`}
+														? `Used ${ago(t.lastUsedAt)}`
+														: `Created ${ago(t.createdAt)}`}
 												</span>
 												<span
 													className={`block ${left <= 7 ? "text-red" : ""}`}
@@ -454,7 +451,7 @@ function ResponseSample({ domain }: { domain: string }) {
 		["attachments", <>[]</>],
 	];
 	return (
-		<pre className="json-light mono mt-2 overflow-x-auto rounded-[10px] border border-rule bg-wash p-4 text-[12px] leading-[20px]">
+		<pre className="json-light mono mt-2 whitespace-pre-wrap break-words rounded-[10px] border border-rule bg-wash p-4 text-[12px] leading-[20px]">
 			{"{\n"}
 			{lines.map(([key, value], i) => (
 				<span key={key}>

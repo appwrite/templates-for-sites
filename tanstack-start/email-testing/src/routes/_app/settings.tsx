@@ -12,7 +12,7 @@ import {
 	saveRetention,
 	sendInvite,
 } from "#/functions/settings";
-import { initials, relativeTime } from "#/lib/format";
+import { ago, initials } from "#/lib/format";
 import type { MemberInfo } from "#/lib/types";
 
 const RETENTION = [1, 3, 7, 14, 30];
@@ -88,10 +88,8 @@ function SettingsPage() {
 						to="/tests"
 						className="card flex items-center gap-3 px-4 py-3.5 hover:bg-wash"
 					>
-						<span className="flex-1">
-							{activeTokens.length} active token
-							{activeTokens.length === 1 ? "" : "s"}
-							{lastUsed ? `, last used ${relativeTime(lastUsed)} ago` : ""}
+						<span className="flex-1" suppressHydrationWarning>
+							{`${activeTokens.length} active token${activeTokens.length === 1 ? "" : "s"}${lastUsed ? `, last used ${ago(lastUsed)}` : ""}`}
 						</span>
 						<span className="flex items-center gap-1.5 font-medium">
 							Manage in Tests & API <Icon name="arrowRight" size={14} />
@@ -276,10 +274,11 @@ function Members({
 								{m.name || m.email}{" "}
 								{m.you ? <span className="text-graphite">(you)</span> : null}
 							</span>
-							<span className="block truncate text-[13px] text-graphite">
-								{m.confirmed
-									? m.email
-									: `Invited ${relativeTime(m.joinedAt)} ago`}
+							<span
+								className="block truncate text-[13px] text-graphite"
+								suppressHydrationWarning
+							>
+								{m.confirmed ? m.email : `Invited ${ago(m.joinedAt)}`}
 							</span>
 						</span>
 						{isAdmin && !m.you ? (

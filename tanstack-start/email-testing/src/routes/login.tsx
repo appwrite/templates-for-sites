@@ -4,7 +4,7 @@ import {
 	redirect,
 	useNavigate,
 } from "@tanstack/react-router";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { AuthFrame, FormError } from "#/components/auth-frame";
 import { Spinner } from "#/components/icons";
 import {
@@ -29,9 +29,8 @@ function LoginPage() {
 	const navigate = useNavigate();
 	const [error, setError] = useState<string | null>(null);
 	const [busy, setBusy] = useState(false);
-	const [host] = useState(() =>
-		typeof window === "undefined" ? "" : window.location.host,
-	);
+	const [host, setHost] = useState("");
+	useEffect(() => setHost(window.location.host), []);
 
 	const submit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();

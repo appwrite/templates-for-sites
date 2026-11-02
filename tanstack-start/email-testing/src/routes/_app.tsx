@@ -28,8 +28,13 @@ function AppLayout() {
 
 	return (
 		<div className="flex min-h-screen">
+			{/* The column keeps the wash and rule down the full page; the sidebar inside stays in view. */}
+			<div
+				className="hidden w-[232px] shrink-0 border-r border-rule bg-wash lg:block"
+				aria-hidden="true"
+			/>
 			<aside
-				className={`fixed inset-y-0 left-0 z-30 w-[232px] shrink-0 flex-col border-r border-rule bg-wash lg:sticky lg:top-0 lg:flex lg:h-screen ${menuOpen ? "flex" : "hidden"}`}
+				className={`fixed inset-y-0 left-0 z-30 w-[232px] flex-col border-r border-rule bg-wash lg:flex ${menuOpen ? "flex" : "hidden"}`}
 			>
 				<div className="flex items-center gap-2.5 px-5 pb-5 pt-[19px]">
 					<Logo />

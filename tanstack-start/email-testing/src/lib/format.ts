@@ -16,6 +16,14 @@ export function relativeTime(iso: string, now = Date.now()) {
 	});
 }
 
+// "just now", "4m ago", "yesterday", "on 2 Nov"
+export function ago(iso: string, now = Date.now()) {
+	const r = relativeTime(iso, now);
+	if (r === "now") return "just now";
+	if (/^\d+[smhd]$/.test(r)) return `${r} ago`;
+	return r === "Yesterday" ? "yesterday" : `on ${r}`;
+}
+
 export function longDate(iso: string) {
 	const date = new Date(iso);
 	return date.toLocaleString(undefined, {
