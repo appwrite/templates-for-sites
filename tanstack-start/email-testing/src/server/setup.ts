@@ -513,7 +513,8 @@ function functionUpdate(fn: Models.Function): Params {
 	if (fn.providerBranches?.length)
 		params.providerBranches = fn.providerBranches;
 	if (fn.providerPaths?.length) params.providerPaths = fn.providerPaths;
-	if (typeof fn.interval === "number") params.interval = fn.interval;
+	// Appwrite rejects an interval next to a schedule, so it only goes back when it's the one in use.
+	if (fn.interval && !fn.schedule) params.interval = fn.interval;
 	return params;
 }
 
@@ -698,6 +699,7 @@ const RUNNERS: Record<SetupStepId, () => Promise<StepResult>> = {
 			await functions.update({
 				...functionUpdate(fn),
 				schedule: CLEANUP_SCHEDULE,
+				interval: undefined,
 			} as never);
 		return { status: "done", log: `cleanup schedule ${CLEANUP_SCHEDULE}` };
 	},

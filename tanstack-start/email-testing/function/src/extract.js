@@ -25,9 +25,12 @@ export function htmlToText(html) {
 function candidates(line) {
 	const found = [];
 	// "4 8 2 9 1 3" or "482-913" style codes
-	for (const m of line.matchAll(/(?<![\w.,$€£])(\d(?:[ -]?\d){3,7})(?![\w%]|[.,]\d)/g)) {
+	for (const m of line.matchAll(
+		/(?<![\w.,$€£])(\d(?:[ -]?\d){3,7})(?![\w%]|[.,]\d)/g,
+	)) {
 		const digits = m[1].replace(/[ -]/g, "");
-		if (digits.length >= 4 && digits.length <= 8 && !YEAR.test(digits)) found.push(digits);
+		if (digits.length >= 4 && digits.length <= 8 && !YEAR.test(digits))
+			found.push(digits);
 	}
 	// Mixed codes such as "K7Q-2XM" or "AB12CD"
 	for (const m of line.matchAll(/\b([A-Z0-9]{3,4}-?[A-Z0-9]{3,4})\b/g)) {
@@ -43,7 +46,10 @@ export function extractCode(subject, text) {
 		const fromSubject = candidates(subject);
 		if (fromSubject.length) return fromSubject[0];
 	}
-	const lines = (text || "").split("\n").map((l) => l.trim()).filter(Boolean);
+	const lines = (text || "")
+		.split("\n")
+		.map((l) => l.trim())
+		.filter(Boolean);
 	const bodyHasWord = subjectHasWord || lines.some((l) => CODE_WORDS.test(l));
 	if (!bodyHasWord) return null;
 	// A line that is only the code wins, then a line that mentions a code word.
@@ -93,7 +99,9 @@ export function extractLinks(html, text) {
 		} catch {
 			return;
 		}
-		const local = /^(localhost|127\.|0\.0\.0\.0|\[::1\]|10\.|192\.168\.)/.test(host) || host.endsWith(".local");
+		const local =
+			/^(localhost|127\.|0\.0\.0\.0|\[::1\]|10\.|192\.168\.)/.test(host) ||
+			host.endsWith(".local");
 		links.push({
 			url: clean,
 			label: (label || "").replace(/\s+/g, " ").trim().slice(0, 120),
@@ -102,7 +110,9 @@ export function extractLinks(html, text) {
 		});
 	};
 	if (html) {
-		for (const m of html.matchAll(/<a\b[^>]*?href\s*=\s*(["'])(.*?)\1[^>]*>([\s\S]*?)<\/a>/gi)) {
+		for (const m of html.matchAll(
+			/<a\b[^>]*?href\s*=\s*(["'])(.*?)\1[^>]*>([\s\S]*?)<\/a>/gi,
+		)) {
 			add(m[2], htmlToText(m[3]));
 		}
 	}
@@ -114,7 +124,8 @@ export function extractLinks(html, text) {
 
 // "Kestrel <no-reply@kestrel.dev>" -> { name: "Kestrel", address: "no-reply@kestrel.dev" }
 export function parseAddress(value) {
-	const raw = (value || "").split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)[0]?.trim() || "";
+	const raw =
+		(value || "").split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)[0]?.trim() || "";
 	const m = raw.match(/^\s*"?([^"<]*?)"?\s*<([^>]+)>\s*$/);
 	if (m) return { name: m[1].trim(), address: m[2].trim().toLowerCase() };
 	return { name: "", address: raw.toLowerCase() };

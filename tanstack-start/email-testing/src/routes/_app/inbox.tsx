@@ -538,7 +538,9 @@ function NoResults() {
 // ---------- 07: empty first run ----------
 
 function EmptyInbox({ domain }: { domain: string }) {
-	const [mailbox] = useState(() => randomMailbox("hello"));
+	// A random name after hydration, so the server and browser render the same first frame.
+	const [mailbox, setMailbox] = useState("hello");
+	useEffect(() => setMailbox(randomMailbox("hello")), []);
 	const address = `${mailbox}@${domain}`;
 	return (
 		<div className="border-t border-rule px-7 py-20">
