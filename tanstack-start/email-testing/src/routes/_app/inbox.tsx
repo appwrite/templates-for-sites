@@ -16,7 +16,7 @@ import {
 	useInbox,
 } from "#/components/inbox-context";
 import { fetchInbox } from "#/functions/inbox";
-import { randomMailbox, relativeTime } from "#/lib/format";
+import { randomMailbox, relativeTime, splitDomain } from "#/lib/format";
 import type { InboxFilter, MessageSummary } from "#/lib/types";
 
 const FILTERS: { id: InboxFilter; label: string }[] = [
@@ -542,9 +542,10 @@ function EmptyInbox({ domain }: { domain: string }) {
 	const [mailbox, setMailbox] = useState("hello");
 	useEffect(() => setMailbox(randomMailbox("hello")), []);
 	const address = `${mailbox}@${domain}`;
+	const [head, tail] = splitDomain(domain);
 	return (
 		<div className="border-t border-rule px-7 py-20">
-			<div className="mx-auto max-w-[560px] text-center">
+			<div className="mx-auto max-w-[640px] text-center">
 				<div className="mx-auto flex w-fit items-center gap-2 text-[13px] text-graphite">
 					<span className="live-dot" /> Waiting for mail
 				</div>
@@ -555,9 +556,13 @@ function EmptyInbox({ domain }: { domain: string }) {
 					Send anything to any name at this domain. It appears here within
 					seconds.
 				</p>
-				<div className="mx-auto mt-7 flex max-w-[560px] items-center gap-3 rounded-[10px] border border-rule-strong px-4 py-3.5 text-left">
-					<span className="mono min-w-0 flex-1 break-all text-[14px]">
-						<span className="bg-hl text-[#0e0e0e]">{mailbox}</span>@{domain}
+				<div className="mx-auto mt-7 flex items-center gap-3 rounded-[10px] border border-rule-strong px-4 py-3.5 text-left">
+					<span className="mono min-w-0 flex-1 text-[14px]">
+						<span className="break-all">
+							<span className="bg-hl text-[#0e0e0e]">{mailbox}</span>@{head}
+						</span>
+						<wbr />
+						<span className="whitespace-nowrap">{tail}</span>
 					</span>
 					<CopyButton
 						value={address}
