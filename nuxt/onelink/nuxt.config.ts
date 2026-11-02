@@ -1,5 +1,5 @@
 export default ({
-    modules: ['@nuxtjs/tailwindcss', 'nuxt-icon', '@vueuse/nuxt'],
+    modules: ['@nuxtjs/tailwindcss', '@nuxt/icon', '@vueuse/nuxt'],
     build: {
         transpile: ["@headlessui/vue"],
     },

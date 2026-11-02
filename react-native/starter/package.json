@@ -57,6 +57,7 @@
   "overrides": {
     "js-yaml@3": {
       "argparse": "^2.0.1"
-    }
+    },
+    "zod": "^4.6.6"
   }
 }

@@ -15,7 +15,10 @@
         "isolatedModules": true,
         "noEmit": true,
         "jsx": "react-jsx",
-        "strictNullChecks": true
+        "strictNullChecks": true,
+        "paths": {
+            "query-string": ["./node_modules/query-string/base.d.ts"]
+        }
     },
     "include": ["src", "setup.ts"],
     "references": [{ "path": "./tsconfig.node.json" }]
