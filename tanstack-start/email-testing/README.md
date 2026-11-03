@@ -23,7 +23,7 @@ Setup then creates everything with the site's own key. You never paste an API ke
 | Team | The `catchall` team, with you as owner (admin) |
 | Database | `catchall`, with the `messages`, `tokens` and `settings` tables |
 | Storage | The `attachments` bucket (25 MB per file) |
-| Function | `inbox` (Node 22), deployed from the `function` folder, with its email trigger and a nightly cleanup at 03:00 UTC |
+| Function | `inbox` (Node 22), deployed from the [`node/email-testing-inbox`](https://github.com/appwrite/templates/tree/1.5.0/node/email-testing-inbox) template in the `appwrite/templates` 1.5.0 release, with its email trigger and a nightly cleanup at 03:00 UTC |
 | Permissions | Removes the scopes only setup needed from this site |
 
 You can close the tab during setup. Reopen `/setup` and sign in to continue where you left off.
@@ -100,4 +100,5 @@ npm run dev
 
 - `src/routes`: pages and the CI API (TanStack Start).
 - `src/server`: server code that talks to Appwrite. `setup.ts` holds the setup steps.
-- `function/`: the function that receives mail. The site bundles this folder and deploys it during setup.
+
+The function that receives mail isn't in this folder. It's the [`node/email-testing-inbox`](https://github.com/appwrite/templates/tree/1.5.0/node/email-testing-inbox) template in `appwrite/templates`, and setup deploys it from the release that `FUNCTION_TEMPLATE_TAG` in `src/server/setup.ts` names, currently 1.5.0.

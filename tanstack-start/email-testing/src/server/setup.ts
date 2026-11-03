@@ -6,14 +6,15 @@ import {
 	type Models,
 	Permission,
 	type ProjectKeyScopes,
+	Query,
 	Role,
 	Runtime,
 	Sites,
 	Storage,
 	TablesDB,
 	Teams,
+	TemplateReferenceType,
 } from "node-appwrite";
-import { InputFile } from "node-appwrite/file";
 import type {
 	ScopeGroup,
 	SetupLogLine,
@@ -36,7 +37,6 @@ import {
 	siteKey,
 } from "./appwrite";
 import { AuthError, readViewer, signIn, signOut } from "./auth";
-import { functionArchive } from "./function-archive";
 import {
 	ALL_SCOPES,
 	BUCKET_ID,
@@ -76,6 +76,9 @@ type SetupPrefs = {
 };
 
 const BUILDING = ["waiting", "processing", "building"];
+
+// The function's code is the node/email-testing-inbox template, deployed from this appwrite/templates release.
+const FUNCTION_TEMPLATE_TAG = "1.5.0";
 
 // ---------- small helpers ----------
 
@@ -349,11 +352,15 @@ async function codeStatus(
 		if (active.status === "ready")
 			return { status: "done", detail: "built", deployment: active };
 	}
-	if (!fn.latestDeploymentId) return { status: "pending", detail: "" };
-	const latest = await functions.getDeployment({
+	// Appwrite sets latestDeploymentId only once the build worker picks a deployment up.
+	// Until then it's empty or names the previous build, so this lists the newest deployment instead.
+	const { deployments } = await functions.listDeployments({
 		functionId: fn.$id,
-		deploymentId: fn.latestDeploymentId,
+		queries: [Query.orderDesc("$createdAt"), Query.limit(1)],
+		total: false,
 	});
+	const latest = deployments[0];
+	if (!latest) return { status: "pending", detail: "" };
 	if (BUILDING.includes(latest.status))
 		return { status: "running", detail: "building", deployment: latest };
 	if (latest.status === "ready")
@@ -665,18 +672,20 @@ const RUNNERS: Record<SetupStepId, () => Promise<StepResult>> = {
 				log: `build ready in ${state.deployment.buildDuration} s`,
 			};
 		}
-		// No deployment yet, or the last build failed: upload a new one.
-		const archive = functionArchive();
-		await functions.createDeployment({
+		// No deployment yet, or the last build failed: deploy the template.
+		// The build uses the entrypoint and build command set on the function.
+		await functions.createTemplateDeployment({
 			functionId: FUNCTION_ID,
-			code: InputFile.fromBuffer(archive, "code.tar.gz"),
+			repository: "templates",
+			owner: "appwrite",
+			rootDirectory: "node/email-testing-inbox",
+			type: TemplateReferenceType.Tag,
+			reference: FUNCTION_TEMPLATE_TAG,
 			activate: true,
-			entrypoint: "src/main.js",
-			commands: "npm install",
 		});
 		return {
 			status: "running",
-			log: `uploaded code.tar.gz, ${Math.max(1, Math.round(archive.length / 1024))} KB`,
+			log: `deploying node/email-testing-inbox from appwrite/templates ${FUNCTION_TEMPLATE_TAG}`,
 		};
 	},
 

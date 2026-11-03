@@ -1,4 +1,4 @@
-// IDs and table shapes that /setup creates. The function in /function uses the same IDs.
+// IDs and table shapes that /setup creates. The inbox function (node/email-testing-inbox in appwrite/templates) uses the same IDs.
 
 export const TEAM_ID = "catchall";
 export const DATABASE_ID = "catchall";
