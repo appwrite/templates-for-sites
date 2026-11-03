@@ -3,6 +3,7 @@
 A shared test inbox for your team, built on Appwrite Sites and Appwrite Function email triggers. Send mail from your app to any name at your project's `appwrite.email` domain, then read it in the browser or wait for it from your tests.
 
 - Every name works: `signup-123@inbox-<project-id>.appwrite.email` exists the moment you send to it.
+- New mail shows up in the inbox as it arrives, over Appwrite Realtime.
 - Verification codes and links are pulled out of each message.
 - The message view shows the HTML (sandboxed), the text, headers, attachments and basic checks: TLS, spam score, local links, missing text part, Gmail clipping.
 - A CI endpoint holds the request until mail arrives, so a test can wait for an email the same way it waits for a page.
@@ -95,6 +96,12 @@ Then run:
 npm install
 npm run dev
 ```
+
+Appwrite Realtime only accepts pages from hostnames the project knows. A deployed site's own domain is one of them. To get live updates on `localhost`, add a Web platform with the hostname `localhost` to the project. Without it, the inbox shows **Reconnecting** and you reload the page to see new mail.
+
+### How live updates work
+
+The session secret stays in an httpOnly cookie that page scripts can't read. The page asks the server for a JWT made from that session (`POST /v1/account/jwts`, 15 minutes), and opens a Realtime socket on the `tablesdb.catchall.tables.messages.rows` channel with it. Appwrite closes a JWT connection once the JWT expires, so the page opens a new socket with a new JWT two minutes before then, and closes the old one once the new one is subscribed. After a dropped connection, a sleeping laptop or a network change it reconnects and fetches the list again, because events sent while it was away are not replayed.
 
 ## Project layout
 

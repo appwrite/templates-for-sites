@@ -14,13 +14,44 @@ export const Route = createFileRoute("/_app/inbox/$messageId")({
 	head: ({ loaderData }) => ({
 		meta: [{ title: `${loaderData?.subject || "Message"} · Catchall` }],
 	}),
-	component: MessageView,
+	component: MessageRoute,
 });
 
 type Tab = "html" | "text" | "headers" | "attachments" | "checks";
 
-function MessageView() {
+function MessageRoute() {
 	const message = Route.useLoaderData();
+	return message ? <MessageView message={message} /> : <MessageGone />;
+}
+
+// The open message was deleted elsewhere: by a teammate, an API call or the cleanup.
+function MessageGone() {
+	const { search, retentionDays } = useInbox();
+	return (
+		<div className="flex min-h-full items-start justify-center px-8 py-24">
+			<div className="max-w-[380px] text-center">
+				<div className="mx-auto flex size-11 items-center justify-center rounded-full border border-rule-strong text-graphite">
+					<Icon name="trash" size={18} />
+				</div>
+				<h2 className="mt-5 text-[19px] font-semibold tracking-tight">
+					This message was deleted
+				</h2>
+				<p className="mt-2 text-[14px] leading-[21px] text-graphite">
+					Someone on your team or an API token deleted it
+					{retentionDays
+						? `, or it passed the ${retentionDays}-day retention`
+						: ""}
+					.
+				</p>
+				<Link to="/inbox" search={search} className="btn mt-6">
+					Back to inbox
+				</Link>
+			</div>
+		</div>
+	);
+}
+
+function MessageView({ message }: { message: MessageDetail }) {
 	const { messages, total, search, markRead, remove, domain } = useInbox();
 	const navigate = useNavigate();
 	const [tab, setTab] = useState<Tab>(message.html ? "html" : "text");

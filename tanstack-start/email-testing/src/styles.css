@@ -318,6 +318,17 @@ body {
 		background: var(--signal);
 		box-shadow: 0 0 0 3px color-mix(in srgb, var(--signal) 20%, transparent);
 	}
+	.live-dot[data-state="connecting"],
+	.live-dot[data-state="reconnecting"] {
+		background: var(--pencil);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--pencil) 22%, transparent);
+		animation: live-wait 1.4s ease-in-out infinite;
+	}
+	.live-dot[data-state="offline"],
+	.live-dot[data-state="signed-out"] {
+		background: var(--red);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--red) 20%, transparent);
+	}
 	.kbd {
 		display: inline-flex;
 		align-items: center;
@@ -378,6 +389,16 @@ body {
 
 .spin {
 	animation: spin 0.9s linear infinite;
+}
+@keyframes live-wait {
+	50% {
+		opacity: 0.35;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.live-dot {
+		animation: none !important;
+	}
 }
 @keyframes spin {
 	to {

@@ -6,7 +6,7 @@ import {
 	useParams,
 	useRouter,
 } from "@tanstack/react-router";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { CopyButton, useCopy } from "#/components/copy-button";
 import { Icon } from "#/components/icons";
 import {
@@ -15,8 +15,10 @@ import {
 	type InboxState,
 	useInbox,
 } from "#/components/inbox-context";
+import { LiveIndicator, useLiveInbox } from "#/components/live-status";
 import { fetchInbox } from "#/functions/inbox";
 import { randomMailbox, relativeTime, splitDomain } from "#/lib/format";
+import { coalesce, type LiveStatus } from "#/lib/live";
 import type { InboxFilter, MessageSummary } from "#/lib/types";
 
 const FILTERS: { id: InboxFilter; label: string }[] = [
@@ -65,22 +67,25 @@ function InboxLayout() {
 		setNow(Date.parse(loaded.now));
 	}, [loaded]);
 
-	// Polls for new mail every 4 seconds while the tab is visible.
-	const latest = useRef(loaded.messages[0]?.id);
+	// Relative times ("2m") move on without new data.
 	useEffect(() => {
-		let ticks = 0;
-		const timer = setInterval(async () => {
-			setNow(Date.now());
-			if (document.visibilityState !== "visible") return;
-			ticks++;
-			try {
+		const timer = setInterval(() => setNow(Date.now()), 15_000);
+		return () => clearInterval(timer);
+	}, []);
+
+	// New mail arrives over Appwrite Realtime. Each row event (new mail, read, deleted) refetches
+	// the list, once per burst, so a cleanup that deletes a hundred rows is one request.
+	const latest = useRef(loaded.messages[0]?.id);
+	const refresh = useMemo(
+		() =>
+			coalesce(async () => {
 				const next = await fetchInbox({
 					data: {
 						filter: search.filter || "all",
 						search: search.q,
 						mailbox: search.mailbox,
 						limit: 100,
-						withCounts: ticks % 4 === 0,
+						withCounts: true,
 					},
 				});
 				setData((prev) => ({
@@ -89,16 +94,17 @@ function InboxLayout() {
 					mailboxes: next.mailboxes || prev.mailboxes,
 					retentionDays: next.retentionDays ?? prev.retentionDays,
 				}));
+				setNow(Date.parse(next.now));
 				if (next.messages[0]?.id !== latest.current) {
 					latest.current = next.messages[0]?.id;
+					// The sidebar's recent addresses come from the app layout's loader.
 					router.invalidate({ filter: (match) => match.routeId === "/_app" });
 				}
-			} catch {
-				// Try again on the next tick.
-			}
-		}, 4000);
-		return () => clearInterval(timer);
-	}, [search.filter, search.q, search.mailbox, router]);
+			}, 250),
+		[search.filter, search.q, search.mailbox, router],
+	);
+	useEffect(() => () => refresh.cancel(), [refresh]);
+	const live = useLiveInbox(refresh);
 
 	const params = useParams({ strict: false }) as { messageId?: string };
 	// Local overlays, so a poll or a loader refresh can't undo what this tab just did.
@@ -114,6 +120,7 @@ function InboxLayout() {
 		retentionDays: data.retentionDays,
 		domain: data.domain,
 		now,
+		live,
 		search,
 		markRead: (id) =>
 			setReadIds((prev) => (prev.has(id) ? prev : new Set(prev).add(id))),
@@ -361,7 +368,7 @@ function GetAddress({
 // ---------- 03: wide list ----------
 
 function WideList() {
-	const { messages, total, counts, retentionDays, now, search, domain } =
+	const { messages, total, counts, retentionDays, now, search, domain, live } =
 		useInbox();
 	const navigate = useNavigate();
 	const filtered = Boolean(search.q || search.mailbox || search.filter);
@@ -420,15 +427,13 @@ function WideList() {
 						<Icon name="x" size={12} />
 					</Link>
 				) : null}
-				<span className="ml-auto flex items-center gap-2 text-[13px] text-graphite">
-					<span className="live-dot" /> Live
-				</span>
+				<LiveIndicator status={live} className="ml-auto" />
 			</div>
 			{messages.length === 0 ? (
 				filtered ? (
 					<NoResults />
 				) : (
-					<EmptyInbox domain={domain} />
+					<EmptyInbox domain={domain} live={live} />
 				)
 			) : (
 				<table className="w-full table-fixed border-t border-rule text-[14px]">
@@ -537,7 +542,7 @@ function NoResults() {
 
 // ---------- 07: empty first run ----------
 
-function EmptyInbox({ domain }: { domain: string }) {
+function EmptyInbox({ domain, live }: { domain: string; live: LiveStatus }) {
 	// A random name after hydration, so the server and browser render the same first frame.
 	const [mailbox, setMailbox] = useState("hello");
 	useEffect(() => setMailbox(randomMailbox("hello")), []);
@@ -546,9 +551,11 @@ function EmptyInbox({ domain }: { domain: string }) {
 	return (
 		<div className="border-t border-rule px-7 py-20">
 			<div className="mx-auto max-w-[640px] text-center">
-				<div className="mx-auto flex w-fit items-center gap-2 text-[13px] text-graphite">
-					<span className="live-dot" /> Waiting for mail
-				</div>
+				<LiveIndicator
+					status={live}
+					label="Waiting for mail"
+					className="mx-auto w-fit"
+				/>
 				<h2 className="mt-4 text-[28px] font-semibold leading-[34px] tracking-display">
 					Your address is ready
 				</h2>
@@ -584,7 +591,7 @@ function EmptyInbox({ domain }: { domain: string }) {
 // ---------- 04: narrow list next to a message ----------
 
 function NarrowList({ activeId }: { activeId: string }) {
-	const { messages, now, search } = useInbox();
+	const { messages, now, search, live } = useInbox();
 	const [searching, setSearching] = useState(Boolean(search.q));
 	return (
 		<div className="hidden w-[360px] shrink-0 flex-col border-r border-rule md:flex">
@@ -600,9 +607,7 @@ function NarrowList({ activeId }: { activeId: string }) {
 						>
 							Inbox
 						</Link>
-						<span className="ml-1 flex items-center gap-1.5 text-[13px] text-graphite">
-							<span className="live-dot" /> Live
-						</span>
+						<LiveIndicator status={live} className="ml-1" />
 						<button
 							type="button"
 							className="ml-auto flex size-9 items-center justify-center rounded-md hover:bg-wash"

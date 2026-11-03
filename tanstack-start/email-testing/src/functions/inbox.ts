@@ -1,7 +1,7 @@
 import { redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import type { InboxFilter } from "#/lib/types";
-import { inboxDomain } from "#/server/appwrite";
+import { errorCode, inboxDomain } from "#/server/appwrite";
 import { AuthError, requireMember } from "#/server/auth";
 import {
 	countMessages,
@@ -46,7 +46,13 @@ export const fetchMessage = createServerFn({ method: "GET" })
 	.validator((data: { id: string }) => data)
 	.handler(async ({ data }) => {
 		const { client } = await member();
-		return getMessage(client, data.id);
+		try {
+			return await getMessage(client, data.id);
+		} catch (err) {
+			// Deleted by someone else, or by the cleanup, while it was open.
+			if (errorCode(err) === 404) return null;
+			throw err;
+		}
 	});
 
 export const removeMessage = createServerFn({ method: "POST" })

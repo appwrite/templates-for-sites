@@ -1,4 +1,5 @@
 import { createContext, useContext } from "react";
+import type { LiveStatus } from "#/lib/live";
 import type { InboxCounts, InboxFilter, MessageSummary } from "#/lib/types";
 
 export type InboxSearch = {
@@ -14,6 +15,8 @@ export type InboxState = {
 	retentionDays: number | null;
 	domain: string;
 	now: number;
+	// Whether new mail shows up on its own right now.
+	live: LiveStatus;
 	search: InboxSearch;
 	markRead: (id: string) => void;
 	remove: (id: string) => void;
