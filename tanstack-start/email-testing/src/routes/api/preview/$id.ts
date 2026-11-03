@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { previewDocument, textPreviewDocument } from "#/lib/email-preview";
 import { json } from "#/server/api";
 import { errorCode, sessionClient } from "#/server/appwrite";
 import { readViewer } from "#/server/auth";
@@ -18,21 +19,18 @@ export const Route = createFileRoute("/api/preview/$id")({
 						params.id,
 						false,
 					);
-					const html =
-						message.html ||
-						`<pre style="white-space:pre-wrap;font:14px/1.5 monospace">${escapeHtml(message.text)}</pre>`;
-					return new Response(
-						`<!doctype html><meta charset="utf-8"><base target="_blank">${html}`,
-						{
-							headers: {
-								"content-type": "text/html; charset=utf-8",
-								"content-security-policy":
-									"sandbox allow-popups allow-popups-to-escape-sandbox; script-src 'none'",
-								"x-content-type-options": "nosniff",
-								"cache-control": "no-store",
-							},
+					const doc = message.html
+						? previewDocument(message.html, { frame: false })
+						: textPreviewDocument(message.text);
+					return new Response(doc, {
+						headers: {
+							"content-type": "text/html; charset=utf-8",
+							"content-security-policy":
+								"sandbox allow-popups allow-popups-to-escape-sandbox; script-src 'none'",
+							"x-content-type-options": "nosniff",
+							"cache-control": "no-store",
 						},
-					);
+					});
 				} catch (err) {
 					if (errorCode(err) === 404)
 						return json({ message: "No message with this ID." }, 404);
@@ -42,7 +40,3 @@ export const Route = createFileRoute("/api/preview/$id")({
 		},
 	},
 });
-
-function escapeHtml(value: string) {
-	return value.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
-}

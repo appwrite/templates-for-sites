@@ -3,7 +3,9 @@ import { useEffect, useMemo, useState } from "react";
 import { CopyButton, useCopy } from "#/components/copy-button";
 import { Icon } from "#/components/icons";
 import { useInbox } from "#/components/inbox-context";
+import { PlainTextView } from "#/components/plain-text-view";
 import { fetchMessage, removeMessage } from "#/functions/inbox";
+import { previewDocument } from "#/lib/email-preview";
 import { bytes, clock, longDate } from "#/lib/format";
 import type { Check, MessageDetail } from "#/lib/types";
 
@@ -23,6 +25,7 @@ function MessageView() {
 	const navigate = useNavigate();
 	const [tab, setTab] = useState<Tab>(message.html ? "html" : "text");
 	const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
+	const [textMode, setTextMode] = useState<"formatted" | "raw">("formatted");
 	const { copied, copy } = useCopy();
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: runs once per opened message
@@ -59,6 +62,58 @@ function MessageView() {
 
 	const issues = message.checks.filter((c) => c.status !== "pass").length;
 	const failing = message.checks.some((c) => c.status === "fail");
+
+	// Switches for the current tab. They sit at the end of the tab row when the pane is wide
+	// and get their own row under it when it is narrow.
+	const viewControls =
+		tab === "html" ? (
+			<div className="flex items-center gap-2">
+				<div className="segmented">
+					<button
+						type="button"
+						data-active={device === "desktop"}
+						onClick={() => setDevice("desktop")}
+						className="flex items-center gap-1.5"
+					>
+						<Icon name="monitor" size={14} /> Desktop
+					</button>
+					<button
+						type="button"
+						data-active={device === "mobile"}
+						onClick={() => setDevice("mobile")}
+						className="flex items-center gap-1.5"
+					>
+						<Icon name="phone" size={14} /> Mobile
+					</button>
+				</div>
+				<a
+					className="flex size-9 items-center justify-center rounded-md text-graphite hover:bg-wash hover:text-ink"
+					href={`/api/preview/${message.id}`}
+					target="_blank"
+					rel="noreferrer"
+					aria-label="Open the HTML in a new tab"
+				>
+					<Icon name="external" size={16} />
+				</a>
+			</div>
+		) : tab === "text" && message.text ? (
+			<div className="segmented">
+				<button
+					type="button"
+					data-active={textMode === "formatted"}
+					onClick={() => setTextMode("formatted")}
+				>
+					Formatted
+				</button>
+				<button
+					type="button"
+					data-active={textMode === "raw"}
+					onClick={() => setTextMode("raw")}
+				>
+					Raw
+				</button>
+			</div>
+		) : null;
 
 	return (
 		<div>
@@ -195,68 +250,57 @@ function MessageView() {
 				onCopy={() => message.code && copy(message.code, "code")}
 			/>
 
-			<div className="flex flex-wrap items-center gap-x-6 border-b border-rule px-8">
-				<TabButton
-					active={tab === "html"}
-					onClick={() => setTab("html")}
-					disabled={!message.html}
-				>
-					HTML
-				</TabButton>
-				<TabButton active={tab === "text"} onClick={() => setTab("text")}>
-					Text
-				</TabButton>
-				<TabButton active={tab === "headers"} onClick={() => setTab("headers")}>
-					Headers
-				</TabButton>
-				<TabButton
-					active={tab === "attachments"}
-					onClick={() => setTab("attachments")}
-				>
-					Attachments{" "}
-					<span className="mono text-[12px] text-graphite">
-						{message.attachments.length}
-					</span>
-				</TabButton>
-				<TabButton active={tab === "checks"} onClick={() => setTab("checks")}>
-					Checks
-					{issues ? (
-						<span
-							className={`flex size-[18px] items-center justify-center rounded-full text-[11px] font-semibold text-paper ${failing ? "bg-red" : "bg-graphite"}`}
+			<div className="@container">
+				<div className="flex border-b border-rule px-8">
+					<div className="-mb-px -mr-8 flex min-w-0 items-end gap-x-5 overflow-x-auto pr-8 [scrollbar-width:none] @2xl:mr-0 @2xl:gap-x-6 @2xl:pr-0">
+						<TabButton
+							active={tab === "html"}
+							onClick={() => setTab("html")}
+							disabled={!message.html}
 						>
-							{issues}
-						</span>
-					) : null}
-				</TabButton>
-				{tab === "html" ? (
-					<div className="ml-auto flex items-center gap-2 py-2">
-						<div className="segmented">
-							<button
-								type="button"
-								data-active={device === "desktop"}
-								onClick={() => setDevice("desktop")}
-								className="flex items-center gap-1.5"
-							>
-								<Icon name="monitor" size={14} /> Desktop
-							</button>
-							<button
-								type="button"
-								data-active={device === "mobile"}
-								onClick={() => setDevice("mobile")}
-								className="flex items-center gap-1.5"
-							>
-								<Icon name="phone" size={14} /> Mobile
-							</button>
+							HTML
+						</TabButton>
+						<TabButton active={tab === "text"} onClick={() => setTab("text")}>
+							Text
+						</TabButton>
+						<TabButton
+							active={tab === "headers"}
+							onClick={() => setTab("headers")}
+						>
+							Headers
+						</TabButton>
+						<TabButton
+							active={tab === "attachments"}
+							onClick={() => setTab("attachments")}
+						>
+							Attachments{" "}
+							<span className="mono text-[12px] text-graphite">
+								{message.attachments.length}
+							</span>
+						</TabButton>
+						<TabButton
+							active={tab === "checks"}
+							onClick={() => setTab("checks")}
+						>
+							Checks
+							{issues ? (
+								<span
+									className={`flex size-[18px] items-center justify-center rounded-full text-[11px] font-semibold text-paper ${failing ? "bg-red" : "bg-graphite"}`}
+								>
+									{issues}
+								</span>
+							) : null}
+						</TabButton>
+					</div>
+					{viewControls ? (
+						<div className="ml-auto hidden shrink-0 items-center py-2 pl-4 @2xl:flex">
+							{viewControls}
 						</div>
-						<a
-							className="flex size-9 items-center justify-center rounded-md text-graphite hover:bg-wash hover:text-ink"
-							href={`/api/preview/${message.id}`}
-							target="_blank"
-							rel="noreferrer"
-							aria-label="Open the HTML in a new tab"
-						>
-							<Icon name="external" size={16} />
-						</a>
+					) : null}
+				</div>
+				{viewControls ? (
+					<div className="flex justify-end border-b border-rule px-8 py-2 @2xl:hidden">
+						{viewControls}
 					</div>
 				) : null}
 			</div>
@@ -264,7 +308,7 @@ function MessageView() {
 			{tab === "html" ? (
 				<HtmlPreview html={message.html} device={device} />
 			) : null}
-			{tab === "text" ? <TextBody text={message.text} /> : null}
+			{tab === "text" ? <TextBody text={message.text} mode={textMode} /> : null}
 			{tab === "headers" ? <Headers headers={message.headers} /> : null}
 			{tab === "attachments" ? <Attachments message={message} /> : null}
 			{tab === "checks" ? <Checks checks={message.checks} /> : null}
@@ -288,7 +332,7 @@ function TabButton({
 			type="button"
 			onClick={onClick}
 			disabled={disabled}
-			className={`-mb-px flex h-12 items-center gap-1.5 border-b-2 text-[15px] disabled:opacity-40 ${active ? "border-ink font-semibold" : "border-transparent text-graphite hover:text-ink"}`}
+			className={`flex h-12 shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 text-[14px] @2xl:text-[15px] disabled:opacity-40 ${active ? "border-ink font-semibold" : "border-transparent text-graphite hover:text-ink"}`}
 		>
 			{children}
 		</button>
@@ -391,38 +435,38 @@ function HtmlPreview({
 	device: "desktop" | "mobile";
 }) {
 	// No scripts and no same-origin: the email can't touch this page or its cookies.
-	const doc = useMemo(
-		() =>
-			`<!doctype html><meta charset="utf-8"><base target="_blank"><style>body{margin:0}</style>${html}`,
-		[html],
-	);
+	// Plain HTML gets reading styles first; designed HTML renders as it was sent.
+	const doc = useMemo(() => previewDocument(html, { frame: true }), [html]);
 	return (
 		<div className="bg-wash px-4 py-7 sm:px-8">
 			<iframe
 				title="HTML preview"
 				sandbox="allow-popups allow-popups-to-escape-sandbox"
 				srcDoc={doc}
-				className="mx-auto block h-[760px] rounded-[10px] border border-rule bg-white"
-				style={{
-					width: device === "mobile" ? 390 : "100%",
-					maxWidth: device === "mobile" ? 390 : 900,
-				}}
+				className="mx-auto block h-[760px] w-full rounded-[10px] border border-rule bg-white"
+				style={device === "mobile" ? { maxWidth: 390 } : undefined}
 			/>
 		</div>
 	);
 }
 
-function TextBody({ text }: { text: string }) {
+function TextBody({ text, mode }: { text: string; mode: "formatted" | "raw" }) {
 	if (!text)
 		return (
 			<p className="px-8 py-8 text-graphite">
 				This message has no plain-text part.
 			</p>
 		);
+	if (mode === "raw")
+		return (
+			<pre className="mono whitespace-pre-wrap break-words px-8 py-7 text-[13px] leading-[20px]">
+				{text}
+			</pre>
+		);
 	return (
-		<pre className="mono whitespace-pre-wrap break-words px-8 py-7 text-[13px] leading-[20px]">
-			{text}
-		</pre>
+		<div className="px-8 pb-10 pt-7">
+			<PlainTextView text={text} />
+		</div>
 	);
 }
 
