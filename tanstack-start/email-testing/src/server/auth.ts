@@ -7,6 +7,7 @@ import { Account, Query, Teams } from "node-appwrite";
 import {
 	createSessionRequest,
 	errorCode,
+	errorType,
 	sessionClient,
 	siteOrigin,
 } from "./appwrite";
@@ -67,6 +68,8 @@ export async function signOut() {
 
 export type SessionState =
 	| { status: "signed-out" }
+	// Signed in with a password, but two-step sign-in still needs a code.
+	| { status: "mfa"; secret: string }
 	| { status: "no-team"; userId: string; name: string; email: string }
 	| { status: "member"; viewer: Viewer; secret: string };
 
@@ -79,6 +82,8 @@ export async function readViewer(): Promise<SessionState> {
 		user = await new Account(client).get();
 	} catch (err) {
 		if (errorCode(err) === 401) {
+			if (errorType(err) === "user_more_factors_required")
+				return { status: "mfa", secret };
 			clearSession();
 			return { status: "signed-out" };
 		}

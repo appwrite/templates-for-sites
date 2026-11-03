@@ -1,5 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
+import { Account } from "node-appwrite";
+import { sessionClient } from "#/server/appwrite";
 import { readSessionSecret, readViewer } from "#/server/auth";
+import { secondFactors } from "#/server/mfa";
 import {
 	beginAuthorization,
 	type ConsentClient,
@@ -13,7 +16,12 @@ import {
 } from "#/server/oauth";
 
 export type ConsentView =
-	| { view: "sign-in"; clientHint: string | null }
+	| {
+			view: "sign-in";
+			clientHint: string | null;
+			// Set when the person signed in with a password and still needs to enter a code.
+			factors: { app: boolean; recovery: boolean } | null;
+	  }
 	| {
 			view: "no-team";
 			email: string;
@@ -51,7 +59,15 @@ export const fetchConsent = createServerFn({ method: "GET" })
 			clientId && /^https?:\/\//i.test(clientId) ? hostOf(clientId) : null;
 
 		const state = await readViewer();
-		if (state.status === "signed-out") return { view: "sign-in", clientHint };
+		if (state.status === "signed-out" || state.status === "mfa")
+			return {
+				view: "sign-in",
+				clientHint,
+				factors:
+					state.status === "mfa"
+						? await secondFactors(new Account(sessionClient(state.secret)))
+						: null,
+			};
 
 		const secret = state.status === "no-team" ? null : state.secret;
 		// Someone not on the team still gets a grant, so Deny can send them back to the agent.
@@ -105,7 +121,7 @@ export const submitConsent = createServerFn({ method: "POST" })
 	.validator((data: { grantId: string; approve: boolean }) => data)
 	.handler(async ({ data }) => {
 		const state = await readViewer();
-		if (state.status === "signed-out")
+		if (state.status === "signed-out" || state.status === "mfa")
 			throw new Error("Sign in again to continue.");
 		// Only team members can approve. Anyone signed in can say no.
 		if (data.approve && state.status !== "member")

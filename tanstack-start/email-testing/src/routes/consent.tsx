@@ -2,7 +2,7 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
 import { AuthFrame, FormError } from "#/components/auth-frame";
 import { Icon, Logo, Spinner } from "#/components/icons";
-import { SignInForm } from "#/components/sign-in-form";
+import { type SecondFactors, SignIn } from "#/components/sign-in-form";
 import {
 	type ConsentView,
 	fetchConsent,
@@ -49,7 +49,13 @@ function ConsentPage() {
 	const host = useHost();
 	switch (view.view) {
 		case "sign-in":
-			return <SignInStep clientHint={view.clientHint} host={host} />;
+			return (
+				<SignInStep
+					clientHint={view.clientHint}
+					factors={view.factors}
+					host={host}
+				/>
+			);
 		case "no-team":
 			return <NoTeam view={view} host={host} />;
 		case "redirect":
@@ -73,14 +79,16 @@ function ConsentPage() {
 
 function SignInStep({
 	clientHint,
+	factors,
 	host,
 }: {
 	clientHint: string | null;
+	factors: SecondFactors | null;
 	host: string;
 }) {
 	const router = useRouter();
 	return (
-		<AuthFrame
+		<SignIn
 			title="Sign in to connect an agent"
 			intro={
 				<>
@@ -94,14 +102,12 @@ function SignInStep({
 				</>
 			}
 			host={host}
-		>
-			<SignInForm
-				submitLabel="Continue"
-				onSignedIn={async () => {
-					await router.invalidate();
-				}}
-			/>
-		</AuthFrame>
+			factors={factors}
+			submitLabel="Continue"
+			onSignedIn={async () => {
+				await router.invalidate();
+			}}
+		/>
 	);
 }
 

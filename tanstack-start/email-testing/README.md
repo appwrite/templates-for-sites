@@ -8,6 +8,7 @@ A shared test inbox for your team, built on Appwrite Sites and Appwrite Function
 - The message view shows the HTML (sandboxed), the text, headers, attachments and basic checks: TLS, spam score, local links, missing text part, Gmail clipping.
 - A CI endpoint holds the request until mail arrives, so a test can wait for an email the same way it waits for a page.
 - AI agents such as Claude Code, Cursor and Codex can read the inbox over MCP. Each person signs in with their own account, and nobody pastes a key.
+- Anyone can turn on two-step sign-in with an authenticator app, with single-use recovery codes as a backup.
 - Messages and attachments are deleted after a retention period you pick (1 to 30 days).
 
 Email triggers run on **Appwrite Cloud** only. On self-hosted Appwrite, `/setup` stops before it creates anything.
@@ -117,6 +118,20 @@ On each request to `/mcp`, the site checks the access token's signature against 
 - **The token must name this server.** Clients send the MCP URL as the OAuth `resource` parameter, as the MCP specification requires. The consent page refuses requests for another server or for none.
 - **Use the domain setup ran on.** Setup points the OAuth server at `/consent` on that domain, and tokens name the MCP URL on that domain. If you move the site to another domain, update the authorization URL in the Console.
 
+## Two-step sign-in
+
+Each person can turn on two-step sign-in for their own account under **Settings → Security**. It uses Appwrite's account MFA with that person's session, not the site's key.
+
+1. Scan the QR code with an authenticator app, or enter the key by hand. The app lists it under the Appwrite project's name.
+2. Enter the 6-digit code from the app. Two-step sign-in only turns on once a code checks out.
+3. Save the 6 recovery codes. They're shown once, with **Copy** and **Download**.
+
+From then on, signing in asks for a code after the password, on `/login` and on the consent screen for AI agents. A recovery code works once in place of an app code. The person's other signed-in browsers ask for a code on their next page load.
+
+To turn it off or get new recovery codes, enter a current code from the app or a recovery code.
+
+Appwrite only accepts the code for the current 30 seconds, so a code entered as it changes fails and the next one works. If someone loses their phone and their recovery codes, a project owner can turn off MFA for them in the Console under **Auth → Users**.
+
 ## Run locally
 
 The app needs the key that Appwrite Sites adds to each request, so run setup on a deployed site first. To work on the UI against that project afterwards, create `.env`:
@@ -143,6 +158,6 @@ The session secret stays in an httpOnly cookie that page scripts can't read. The
 ## Project layout
 
 - `src/routes`: pages, the CI API, `/mcp` and `/consent` (TanStack Start).
-- `src/server`: server code that talks to Appwrite. `setup.ts` holds the setup steps, `mcp.ts` the MCP tools and `oauth.ts` the agent sign-in.
+- `src/server`: server code that talks to Appwrite. `setup.ts` holds the setup steps, `mcp.ts` the MCP tools, `oauth.ts` the agent sign-in and `mfa.ts` two-step sign-in.
 
 The function that receives mail isn't in this folder. It's the [`node/email-testing-inbox`](https://github.com/appwrite/templates/tree/1.5.0/node/email-testing-inbox) template in `appwrite/templates`, and setup deploys it from the release that `FUNCTION_TEMPLATE_TAG` in `src/server/setup.ts` names, currently 1.5.0.

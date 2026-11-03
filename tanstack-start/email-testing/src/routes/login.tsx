@@ -1,7 +1,7 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AuthFrame } from "#/components/auth-frame";
-import { SignInForm } from "#/components/sign-in-form";
+import { SignIn } from "#/components/sign-in-form";
 import { fetchLoginState, submitSignOut } from "#/functions/session";
 
 export const Route = createFileRoute("/login")({
@@ -43,16 +43,14 @@ function LoginPage() {
 	}
 
 	return (
-		<AuthFrame
+		<SignIn
 			title="Sign in"
 			intro="Your team's test inbox. Ask an admin for an invite if you don't have an account yet."
 			host={host}
-		>
-			<SignInForm
-				onSignedIn={async (result) => {
-					await navigate({ to: result.setupComplete ? "/inbox" : "/setup" });
-				}}
-			/>
-		</AuthFrame>
+			factors={state.factors}
+			onSignedIn={async (result) => {
+				await navigate({ to: result.setupComplete ? "/inbox" : "/setup" });
+			}}
+		/>
 	);
 }

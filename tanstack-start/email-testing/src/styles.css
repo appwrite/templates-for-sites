@@ -185,6 +185,12 @@ body {
 		border-color: var(--ink);
 		box-shadow: 0 0 0 1px var(--ink);
 	}
+	.input[aria-invalid="true"] {
+		border-color: var(--red);
+	}
+	.input[aria-invalid="true"]:focus {
+		box-shadow: 0 0 0 1px var(--red);
+	}
 	.label {
 		display: block;
 		font-size: 13px;

@@ -3,6 +3,7 @@ import { type FormEvent, type ReactNode, useState } from "react";
 import { CodeTabs } from "#/components/code-tabs";
 import { CopyButton } from "#/components/copy-button";
 import { Icon, Spinner } from "#/components/icons";
+import { TwoStepSettings } from "#/components/two-step-settings";
 import { fetchInbox } from "#/functions/inbox";
 import {
 	changeRole,
@@ -13,6 +14,7 @@ import {
 	saveRetention,
 	sendInvite,
 } from "#/functions/settings";
+import { fetchTwoStep } from "#/functions/two-step";
 import { ago, initials } from "#/lib/format";
 import type { MemberInfo } from "#/lib/types";
 
@@ -20,12 +22,18 @@ const RETENTION = [1, 3, 7, 14, 30];
 
 export const Route = createFileRoute("/_app/settings")({
 	loader: async () => {
-		const [settings, tokens, inbox] = await Promise.all([
+		const [settings, tokens, inbox, twoStep] = await Promise.all([
 			fetchSettings(),
 			fetchTokens(),
 			fetchInbox({ data: { limit: 1 } }),
+			fetchTwoStep(),
 		]);
-		return { ...settings, tokens: tokens.tokens, messageCount: inbox.total };
+		return {
+			...settings,
+			tokens: tokens.tokens,
+			messageCount: inbox.total,
+			twoStep,
+		};
 	},
 	head: () => ({ meta: [{ title: "Settings · Catchall" }] }),
 	component: SettingsPage,
@@ -82,6 +90,16 @@ function SettingsPage() {
 					intro="Everyone here sees all mail. Admins can change settings and manage members."
 				>
 					<Members members={data.members} isAdmin={isAdmin} />
+				</Row>
+
+				<Row
+					title="Security"
+					intro="Just for your account. Two-step sign-in asks for a code from an authenticator app after your password."
+				>
+					<TwoStepSettings
+						enabled={data.twoStep.enabled}
+						email={data.members.find((m) => m.you)?.email ?? ""}
+					/>
 				</Row>
 
 				<Row title="API tokens" intro="Read-only tokens for test runners.">
