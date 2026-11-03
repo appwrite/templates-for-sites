@@ -5,6 +5,7 @@ import {
 	ID,
 	type Models,
 	Permission,
+	Project,
 	type ProjectKeyScopes,
 	Query,
 	Role,
@@ -23,6 +24,8 @@ import type {
 	SetupView,
 	StepStatus,
 } from "#/lib/setup-types";
+import { MCP_SCOPE } from "./access-token";
+import type { AgentSetup } from "./agents";
 import {
 	adminClient,
 	appwriteEnv,
@@ -37,6 +40,7 @@ import {
 	siteKey,
 } from "./appwrite";
 import { AuthError, readViewer, signIn, signOut } from "./auth";
+import { consentUrl, hostOf, mcpUrl } from "./oauth";
 import {
 	ALL_SCOPES,
 	BUCKET_ID,
@@ -63,6 +67,7 @@ const STEPS: { id: SetupStepId; label: string }[] = [
 	{ id: "code", label: "Function code" },
 	{ id: "trigger", label: "Email trigger" },
 	{ id: "schedule", label: "Nightly cleanup schedule" },
+	{ id: "agents", label: "Sign-in for AI agents" },
 	{ id: "release", label: "Remove setup permissions" },
 ];
 
@@ -73,6 +78,7 @@ type SetupPrefs = {
 	lastAt?: string;
 	released?: boolean;
 	admin?: { name: string; email: string };
+	agents?: AgentSetup;
 };
 
 const BUILDING = ["waiting", "processing", "building"];
@@ -109,6 +115,7 @@ const PRODUCTS: Record<string, string> = {
 	files: "Storage",
 	functions: "Functions",
 	sites: "Sites",
+	project: "Project",
 };
 
 function groupScopes(scopes: string[]): ScopeGroup[] {
@@ -246,14 +253,16 @@ async function probeSteps(prefs: SetupPrefs): Promise<SetupStep[]> {
 	const storage = new Storage(client);
 	const functions = new Functions(client);
 
-	const [database, bucket, fn] = await Promise.all([
+	const [database, bucket, fn, project] = await Promise.all([
 		exists(() => db.get({ databaseId: DATABASE_ID })),
 		exists(() => storage.getBucket({ bucketId: BUCKET_ID })),
 		functions.get({ functionId: FUNCTION_ID }).catch((err) => {
 			if (errorCode(err) === 404) return null;
 			throw err;
 		}),
+		new Project(client).get(),
 	]);
+	const agents = agentsStatus(project, prefs.agents);
 
 	const result: Record<
 		SetupStepId,
@@ -272,6 +281,10 @@ async function probeSteps(prefs: SetupPrefs): Promise<SetupStep[]> {
 		schedule: {
 			status: fn?.schedule === CLEANUP_SCHEDULE ? "done" : "pending",
 			detail: CLEANUP_SCHEDULE,
+		},
+		agents: {
+			status: agents.done ? "done" : "pending",
+			detail: agents.detail,
 		},
 		release: { status: "pending", detail: "" },
 	};
@@ -328,6 +341,13 @@ async function probeSteps(prefs: SetupPrefs): Promise<SetupStep[]> {
 		const duration = prefs.durations?.[id];
 		if (step.status === "done" && duration !== undefined)
 			step.durationMs = duration;
+		if (id === "agents" && step.status !== "done") {
+			step.note =
+				"Turns on this project's OAuth server and points it at this site's consent screen, so agents like Claude Code, Cursor and Codex can sign in to /mcp.";
+		}
+		if (id === "agents" && agents.elsewhere) {
+			step.note = `This project's OAuth server already sends people to ${hostOf(agents.elsewhere)}. Setup left it alone, so AI agents can't sign in to Catchall. Everything else works.`;
+		}
 		if (id === "release" && step.status !== "done") {
 			step.note = `The site updates its own scopes and gives back the ${summary.givenBack.length} it only needed to set up. Keeps ${summary.kept.length}: ${summary.kept.join(", ")}.`;
 		}
@@ -487,7 +507,35 @@ export async function claimAdmin(input: ClaimInput): Promise<SetupView> {
 
 // ---------- running steps ----------
 
-type StepResult = { status: StepStatus; log?: string; durationMs?: number };
+type StepResult = {
+	status: StepStatus;
+	log?: string;
+	durationMs?: number;
+	agents?: AgentSetup;
+};
+
+// Appwrite always offers these OpenID Connect scopes and adds them back on every update.
+const BUILT_IN_SCOPES = ["openid", "profile", "email", "phone"];
+
+function agentsStatus(project: Models.Project, saved: AgentSetup | undefined) {
+	const ours = consentUrl();
+	const theirs = project.oAuth2ServerAuthorizationUrl || "";
+	const enabled = Boolean(project.oAuth2ServerEnabled);
+	if (enabled && theirs && theirs !== ours)
+		return {
+			done: saved?.status === "elsewhere" && saved.authorizationUrl === theirs,
+			detail: `used by ${hostOf(theirs)}`,
+			elsewhere: theirs,
+		};
+	return {
+		done:
+			enabled &&
+			theirs === ours &&
+			(project.oAuth2ServerScopes ?? []).includes(MCP_SCOPE),
+		detail: `${hostOf(ours)}/consent`,
+		elsewhere: null,
+	};
+}
 
 // The SDK's update methods are overloaded, so these build plain objects and the calls cast them.
 type Params = Record<string, unknown>;
@@ -713,6 +761,67 @@ const RUNNERS: Record<SetupStepId, () => Promise<StepResult>> = {
 		return { status: "done", log: `cleanup schedule ${CLEANUP_SCHEDULE}` };
 	},
 
+	async agents() {
+		const project = new Project(adminClient());
+		const current = await project.get();
+		const ours = consentUrl();
+		const theirs = current.oAuth2ServerAuthorizationUrl || "";
+		const agents: AgentSetup = {
+			status: "ready",
+			mcpUrl: mcpUrl(),
+			authorizationUrl: ours,
+			updatedAt: new Date().toISOString(),
+		};
+		// Another app already uses this project's OAuth server. Taking it over would break that app.
+		if (current.oAuth2ServerEnabled && theirs && theirs !== ours)
+			return {
+				status: "done",
+				log: `OAuth server already used by ${hostOf(theirs)}, left as it is`,
+				agents: { ...agents, status: "elsewhere", authorizationUrl: theirs },
+			};
+		const scopes = current.oAuth2ServerScopes ?? [];
+		if (
+			!current.oAuth2ServerEnabled ||
+			theirs !== ours ||
+			!scopes.includes(MCP_SCOPE)
+		) {
+			// The update replaces the whole OAuth server configuration, so every current value goes
+			// back with the three that change: on, our consent screen, and the catchall.read scope.
+			await project.updateOAuth2Server({
+				enabled: true,
+				authorizationUrl: ours,
+				scopes: [
+					...new Set([
+						...scopes.filter((s) => !BUILT_IN_SCOPES.includes(s)),
+						MCP_SCOPE,
+					]),
+				],
+				authorizationDetailsTypes:
+					current.oAuth2ServerAuthorizationDetailsTypes ?? [],
+				accessTokenDuration: current.oAuth2ServerAccessTokenDuration ?? null,
+				refreshTokenDuration: current.oAuth2ServerRefreshTokenDuration ?? null,
+				publicAccessTokenDuration:
+					current.oAuth2ServerPublicAccessTokenDuration ?? null,
+				publicRefreshTokenDuration:
+					current.oAuth2ServerPublicRefreshTokenDuration ?? null,
+				installationAccessTokenDuration:
+					current.oAuth2ServerInstallationAccessTokenDuration ?? null,
+				confidentialPkce: current.oAuth2ServerConfidentialPkce ?? null,
+				verificationUrl: current.oAuth2ServerVerificationUrl || undefined,
+				userCodeLength: current.oAuth2ServerUserCodeLength ?? null,
+				userCodeFormat: current.oAuth2ServerUserCodeFormat || undefined,
+				deviceCodeDuration: current.oAuth2ServerDeviceCodeDuration ?? null,
+				defaultScopes: current.oAuth2ServerDefaultScopes ?? [],
+				installationScopes: current.oAuth2ServerInstallationScopes ?? [],
+			});
+		}
+		return {
+			status: "done",
+			log: `OAuth server on, consent screen at ${hostOf(ours)}/consent`,
+			agents,
+		};
+	},
+
 	async release() {
 		const { siteId } = appwriteEnv();
 		if (!siteId)
@@ -780,6 +889,7 @@ export async function runStep(stepId: SetupStepId): Promise<SetupView> {
 
 	if (result.log) log.push({ t: new Date().toISOString(), text: result.log });
 	const durations = { ...(prefs.durations || {}) };
+	if (result.agents) prefs.agents = result.agents;
 	if (result.status === "done")
 		durations[stepId] = result.durationMs ?? Date.now() - started;
 	const next: SetupPrefs = {

@@ -7,6 +7,7 @@ A shared test inbox for your team, built on Appwrite Sites and Appwrite Function
 - Verification codes and links are pulled out of each message.
 - The message view shows the HTML (sandboxed), the text, headers, attachments and basic checks: TLS, spam score, local links, missing text part, Gmail clipping.
 - A CI endpoint holds the request until mail arrives, so a test can wait for an email the same way it waits for a page.
+- AI agents such as Claude Code, Cursor and Codex can read the inbox over MCP. Each person signs in with their own account, and nobody pastes a key.
 - Messages and attachments are deleted after a retention period you pick (1 to 30 days).
 
 Email triggers run on **Appwrite Cloud** only. On self-hosted Appwrite, `/setup` stops before it creates anything.
@@ -25,6 +26,7 @@ Setup then creates everything with the site's own key. You never paste an API ke
 | Database | `catchall`, with the `messages`, `tokens` and `settings` tables |
 | Storage | The `attachments` bucket (25 MB per file) |
 | Function | `inbox` (Node 22), deployed from the [`node/email-testing-inbox`](https://github.com/appwrite/templates/tree/1.5.0/node/email-testing-inbox) template in the `appwrite/templates` 1.5.0 release, with its email trigger and a nightly cleanup at 03:00 UTC |
+| Sign-in for AI agents | Turns on the project's OAuth server, points its authorization URL at this site's `/consent` page and adds the `catchall.read` scope. Other OAuth server settings stay as they are. If the server already sends people to another app, setup leaves it alone and says so. |
 | Permissions | Removes the scopes only setup needed from this site |
 
 You can close the tab during setup. Reopen `/setup` and sign in to continue where you left off.
@@ -33,7 +35,7 @@ You can close the tab during setup. Reopen `/setup` and sign in to continue wher
 
 Appwrite Sites gives every request a short-lived key with the scopes set on the site. Catchall reads those scopes from the key on each request.
 
-The template asks for 15 scopes. When setup finishes, the site removes 11 of them from itself and keeps 4:
+The template asks for 17 scopes. When setup finishes, the site removes 12 of them from itself and keeps 5:
 
 | Scope | Kept after setup | Used for |
 | --- | --- | --- |
@@ -41,12 +43,15 @@ The template asks for 15 scopes. When setup finishes, the site removes 11 of the
 | `rows.write` | Yes | Settings, API tokens, and emptying the inbox |
 | `files.read` | Yes | Attachment downloads from the CI API |
 | `files.write` | Yes | Deleting attachments when you empty the inbox |
-| `teams.read` | No | Checking whether an admin exists |
+| `teams.read` | Yes | Checking whether an admin exists, and that an AI agent's account is still on the team |
 | `databases.read`, `databases.write` | No | Creating the database |
 | `tables.read`, `tables.write` | No | Creating the tables, with columns and indexes |
 | `buckets.read`, `buckets.write` | No | Creating the attachments bucket |
 | `functions.read`, `functions.write` | No | Deploying the function and turning on its email trigger |
+| `project.read`, `project.write` | No | Turning on the project's OAuth server so AI agents can sign in |
 | `sites.read`, `sites.write` | No | Removing the setup scopes from this site |
+
+`project.write` covers every project setting, including deleting the project. Setup only uses it to update the OAuth server, then gives it back.
 
 If the site was deployed without these scopes, `/setup` lists the missing ones. Add them under **Sites → your site → Settings → Build → Scopes**, then select **Check again**. You don't need to redeploy.
 
@@ -80,6 +85,38 @@ const email = await res.json(); // { subject, codes, links, text, html, attachme
 
 `to` takes the full address or only the part before the `@`. Send the token as `Authorization: Bearer ctk_...` or in an `X-Catchall-Token` header. Every endpoint returns 401 for a missing or expired token.
 
+## Connect an AI agent
+
+The MCP server is at `https://<your-site>/mcp`. **Settings → Connect an AI agent** shows the URL and the setup for each client:
+
+| Client | Setup |
+| --- | --- |
+| Claude Code | `claude mcp add --transport http catchall https://<your-site>/mcp`, then run `/mcp`, pick catchall and choose **Authenticate** |
+| Cursor | Add `{"mcpServers": {"catchall": {"url": "https://<your-site>/mcp"}}}` to `~/.cursor/mcp.json`, then select **Connect** under **Settings → MCP** |
+| Codex | Add `[mcp_servers.catchall]` with `url = "https://<your-site>/mcp"` to `~/.codex/config.toml`, then run `codex mcp login catchall` |
+
+Agents get four read-only tools. They can't send, change or delete mail.
+
+| Tool | Returns |
+| --- | --- |
+| `list_messages` | Recent messages, newest first. Filter by address (`to`), by time (`since`) and to unread mail. |
+| `get_message` | One message: both bodies, codes, links, attachments and checks. |
+| `wait_for_message` | The first message to an address once it arrives, waiting up to 25 seconds per call. |
+| `get_latest_code` | The newest verification code and action link sent to an address, optionally waiting for it. |
+
+### How agent sign-in works
+
+`/mcp` is a Streamable HTTP endpoint. Without a token it returns 401 with a `WWW-Authenticate` header that points to `/.well-known/oauth-protected-resource/mcp`. That document names the project's OAuth server (`https://<region>.cloud.appwrite.io/v1/oauth2/<project-id>`), so the client registers itself, opens a browser and sends the person to the authorization URL, which is this site's `/consent` page.
+
+`/consent` signs the person in, shows what the agent asks for and approves or rejects the request through the OAuth server. Only members of the `catchall` team can approve. Anyone else can only send the agent away.
+
+On each request to `/mcp`, the site checks the access token's signature against the project's keys, then its issuer, audience, expiry and the `catchall.read` scope. It then checks that the person is still on the team.
+
+- **Removing someone from the team** cuts off their agents on the next request.
+- **Revoking an agent's access in Appwrite** takes effect when its access token expires, within an hour. The site checks tokens itself and doesn't ask Appwrite on every request.
+- **The token must name this server.** Clients send the MCP URL as the OAuth `resource` parameter, as the MCP specification requires. The consent page refuses requests for another server or for none.
+- **Use the domain setup ran on.** Setup points the OAuth server at `/consent` on that domain, and tokens name the MCP URL on that domain. If you move the site to another domain, update the authorization URL in the Console.
+
 ## Run locally
 
 The app needs the key that Appwrite Sites adds to each request, so run setup on a deployed site first. To work on the UI against that project afterwards, create `.env`:
@@ -87,7 +124,7 @@ The app needs the key that Appwrite Sites adds to each request, so run setup on 
 ```env
 APPWRITE_ENDPOINT=https://<region>.cloud.appwrite.io/v1
 APPWRITE_PROJECT_ID=<project-id>
-APPWRITE_API_KEY=<a key with rows.read, rows.write, files.read and files.write>
+APPWRITE_API_KEY=<a key with rows.read, rows.write, files.read, files.write and teams.read>
 ```
 
 Then run:
@@ -105,7 +142,7 @@ The session secret stays in an httpOnly cookie that page scripts can't read. The
 
 ## Project layout
 
-- `src/routes`: pages and the CI API (TanStack Start).
-- `src/server`: server code that talks to Appwrite. `setup.ts` holds the setup steps.
+- `src/routes`: pages, the CI API, `/mcp` and `/consent` (TanStack Start).
+- `src/server`: server code that talks to Appwrite. `setup.ts` holds the setup steps, `mcp.ts` the MCP tools and `oauth.ts` the agent sign-in.
 
 The function that receives mail isn't in this folder. It's the [`node/email-testing-inbox`](https://github.com/appwrite/templates/tree/1.5.0/node/email-testing-inbox) template in `appwrite/templates`, and setup deploys it from the release that `FUNCTION_TEMPLATE_TAG` in `src/server/setup.ts` names, currently 1.5.0.

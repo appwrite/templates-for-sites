@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { type FormEvent, type ReactNode, useState } from "react";
+import { CodeTabs } from "#/components/code-tabs";
 import { CopyButton } from "#/components/copy-button";
 import { Icon, Spinner } from "#/components/icons";
 import { fetchInbox } from "#/functions/inbox";
@@ -95,6 +96,22 @@ function SettingsPage() {
 							Manage in Tests & API <Icon name="arrowRight" size={14} />
 						</span>
 					</Link>
+				</Row>
+
+				<Row
+					title="Connect an AI agent"
+					intro="Let Claude Code, Cursor or Codex read this inbox over MCP. Each person signs in with their own account."
+				>
+					<AgentConnect
+						url={data.mcpUrl}
+						status={data.agents?.status ?? null}
+						elsewhere={
+							data.agents?.status === "elsewhere"
+								? data.agents.authorizationUrl
+								: null
+						}
+						consentUrl={data.mcpUrl.replace(/\/mcp$/, "/consent")}
+					/>
 				</Row>
 
 				<Row
@@ -434,6 +451,158 @@ function EmptyInbox({ count }: { count: number }) {
 			{result ? (
 				<p className="mt-2 text-[13px] text-graphite">{result}</p>
 			) : null}
+		</div>
+	);
+}
+
+const AGENT_TOOLS = [
+	["wait_for_message", "Waits for mail to an address and returns it"],
+	["get_latest_code", "The newest code and action link for an address"],
+	["list_messages", "Recent mail, filtered by address and time"],
+	["get_message", "One message in full: bodies, links, checks"],
+];
+
+function agentTabs(url: string) {
+	return [
+		{
+			id: "claude",
+			label: "Claude Code",
+			files: [
+				{
+					path: "Terminal",
+					code: `claude mcp add --transport http catchall ${url}`,
+				},
+			],
+			note: (
+				<>
+					Then run <span className="mono text-white">/mcp</span> in Claude Code,
+					pick catchall and choose Authenticate. A browser opens to sign in.
+				</>
+			),
+		},
+		{
+			id: "cursor",
+			label: "Cursor",
+			files: [
+				{
+					path: "~/.cursor/mcp.json",
+					code: JSON.stringify({ mcpServers: { catchall: { url } } }, null, 2),
+				},
+			],
+			note: "Cursor lists catchall under Settings → MCP with a Connect button. Click it to sign in.",
+		},
+		{
+			id: "codex",
+			label: "Codex",
+			files: [
+				{
+					path: "~/.codex/config.toml",
+					code: `[mcp_servers.catchall]\nurl = "${url}"`,
+				},
+				{ path: "Terminal", code: "codex mcp login catchall" },
+			],
+			note: "The login command opens a browser to sign in.",
+		},
+		{
+			id: "other",
+			label: "Other clients",
+			files: [{ path: "MCP server URL", code: url }],
+			note: (
+				<>
+					Streamable HTTP with OAuth 2.1. Clients find the sign-in details on
+					their own from the 401 response. Scope:{" "}
+					<span className="mono text-white">catchall.read</span>.
+				</>
+			),
+		},
+	];
+}
+
+function AgentConnect({
+	url,
+	status,
+	elsewhere,
+	consentUrl,
+}: {
+	url: string;
+	status: "ready" | "elsewhere" | null;
+	elsewhere: string | null;
+	consentUrl: string;
+}) {
+	return (
+		<div className="space-y-4">
+			<div className="card flex items-center gap-3 px-4 py-3.5">
+				<span className="flex size-9 shrink-0 items-center justify-center rounded-[8px] bg-wash text-graphite">
+					<Icon name="plug" size={17} />
+				</span>
+				<span className="min-w-0 flex-1">
+					<span className="flex items-center gap-2 text-[12px] text-graphite">
+						MCP server
+						{status === "ready" ? (
+							<span className="flex items-center gap-1.5 text-signal sm:hidden">
+								<span className="live-dot" /> Sign-in on
+							</span>
+						) : null}
+					</span>
+					<span className="mono block break-all">{url}</span>
+				</span>
+				{status === "ready" ? (
+					<span className="hidden items-center gap-1.5 text-[13px] text-signal sm:flex">
+						<span className="live-dot" /> Sign-in on
+					</span>
+				) : null}
+				<CopyButton value={url} />
+			</div>
+
+			{status === "elsewhere" && elsewhere ? (
+				<Callout title="Agents can't sign in here yet">
+					This project's OAuth server already sends people to{" "}
+					<span className="mono text-ink">{elsewhere}</span>, so setup left it
+					alone. To use it for Catchall, set its authorization URL to{" "}
+					<span className="mono text-ink">{consentUrl}</span> in the Appwrite
+					Console. That stops the other app's sign-in.
+				</Callout>
+			) : null}
+			{status === null ? (
+				<Callout title="Agent sign-in isn't set up">
+					This inbox was set up before agents could connect. Turn on the
+					project's OAuth server in the Appwrite Console with the authorization
+					URL <span className="mono text-ink">{consentUrl}</span> and the scope{" "}
+					<span className="mono text-ink">catchall.read</span>.
+				</Callout>
+			) : null}
+
+			<CodeTabs tabs={agentTabs(url)} />
+
+			<div className="card divide-y divide-rule">
+				<div className="flex items-center justify-between px-4 py-3">
+					<span className="text-[13px] font-medium">What agents can do</span>
+					<span className="flex items-center gap-1.5 text-[12px] text-graphite">
+						<Icon name="lock" size={13} /> Read-only
+					</span>
+				</div>
+				{AGENT_TOOLS.map(([name, what]) => (
+					<div
+						key={name}
+						className="grid gap-1 px-4 py-2.5 sm:grid-cols-[176px_1fr] sm:gap-4"
+					>
+						<span className="mono text-[13px]">{name}</span>
+						<span className="text-[13px] text-graphite">{what}</span>
+					</div>
+				))}
+			</div>
+		</div>
+	);
+}
+
+function Callout({ title, children }: { title: string; children: ReactNode }) {
+	return (
+		<div className="flex gap-3 rounded-[10px] border border-rule-strong bg-wash px-4 py-3.5">
+			<Icon name="alert" size={16} className="mt-0.5 shrink-0 text-red" />
+			<div className="text-[13px] leading-[20px] text-graphite">
+				<div className="mb-0.5 text-[14px] font-medium text-ink">{title}</div>
+				{children}
+			</div>
 		</div>
 	);
 }

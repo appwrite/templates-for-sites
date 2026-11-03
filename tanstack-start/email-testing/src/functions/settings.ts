@@ -1,8 +1,10 @@
 import { redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
+import { readAgentSetup } from "#/server/agents";
 import { inboxDomain, siteOrigin } from "#/server/appwrite";
 import { AuthError, requireAdmin, requireMember } from "#/server/auth";
 import { emptyInbox } from "#/server/messages";
+import { mcpUrl } from "#/server/oauth";
 import {
 	getRetention,
 	inviteMember,
@@ -27,13 +29,16 @@ async function guard<T>(fn: () => Promise<T>) {
 export const fetchSettings = createServerFn({ method: "GET" }).handler(() =>
 	guard(async () => {
 		const { viewer, client } = await requireMember();
-		const [members, retentionDays] = await Promise.all([
+		const [members, retentionDays, agents] = await Promise.all([
 			listMembers(client, viewer),
 			getRetention(),
+			readAgentSetup(client).catch(() => null),
 		]);
 		return {
 			members,
 			retentionDays,
+			agents,
+			mcpUrl: agents?.mcpUrl || mcpUrl(),
 			permissions: permissionRows(),
 			domain: inboxDomain(),
 			role: viewer.role,

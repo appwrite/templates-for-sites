@@ -29,11 +29,14 @@ export const RUNTIME_SCOPES = [
 		scope: "files.write",
 		why: "Deletes attachments when you empty the inbox.",
 	},
+	{
+		scope: "teams.read",
+		why: "Checks whether an admin already exists, and that an AI agent's account is still on the team.",
+	},
 ] as const;
 
 // Setup needs these too, and the site gives them back in its last step.
 export const SETUP_ONLY_SCOPES = [
-	{ scope: "teams.read", why: "Checks whether an admin already exists." },
 	{ scope: "databases.read", why: "Checks the database." },
 	{ scope: "databases.write", why: "Creates the database." },
 	{ scope: "tables.read", why: "Checks the tables." },
@@ -47,6 +50,14 @@ export const SETUP_ONLY_SCOPES = [
 	{
 		scope: "functions.write",
 		why: "Deploys the function that receives mail and turns on its email trigger.",
+	},
+	{
+		scope: "project.read",
+		why: "Reads the project's OAuth server settings, so it changes only what it needs.",
+	},
+	{
+		scope: "project.write",
+		why: "Turns on the project's OAuth server so AI agents can sign in.",
 	},
 	{
 		scope: "sites.read",

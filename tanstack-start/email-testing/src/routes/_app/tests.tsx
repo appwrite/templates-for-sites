@@ -1,5 +1,6 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { type FormEvent, type ReactNode, useState } from "react";
+import { type CodeTab, CodeTabs } from "#/components/code-tabs";
 import { CopyButton } from "#/components/copy-button";
 import { Icon, Spinner } from "#/components/icons";
 import { addToken, deleteToken, fetchTokens } from "#/functions/settings";
@@ -288,9 +289,7 @@ function Param({ name, children }: { name: string; children: ReactNode }) {
 	);
 }
 
-function snippets(
-	domain: string,
-): { id: string; label: string; files: { path: string; code: string }[] }[] {
+function snippets(domain: string): CodeTab[] {
 	return [
 		{
 			id: "playwright",
@@ -377,41 +376,7 @@ test('sends a reset link', async () => {
 }
 
 function Snippets({ domain }: { domain: string }) {
-	const all = snippets(domain);
-	const [active, setActive] = useState(all[0].id);
-	const current = all.find((s) => s.id === active) || all[0];
-	return (
-		<div className="mt-5 overflow-hidden rounded-[10px] bg-[var(--code-bg)] text-[var(--code-ink)]">
-			<div className="flex gap-5 border-b border-white/10 px-4">
-				{all.map((s) => (
-					<button
-						key={s.id}
-						type="button"
-						onClick={() => setActive(s.id)}
-						className={`-mb-px h-11 border-b-2 text-[14px] ${s.id === active ? "border-[var(--hl)] font-medium text-white" : "border-transparent text-white/60 hover:text-white"}`}
-					>
-						{s.label}
-					</button>
-				))}
-			</div>
-			{current.files.map((file) => (
-				<div key={file.path} className="border-b border-white/10 last:border-0">
-					<div className="flex items-center justify-between px-5 pt-4">
-						<span className="mono text-[12px] text-white/50">{file.path}</span>
-						<CopyButton
-							value={file.code}
-							label="Copy"
-							className="!text-white/60 text-[12px] hover:!text-white"
-							size={13}
-						/>
-					</div>
-					<pre className="mono overflow-x-auto px-5 pb-5 pt-3 text-[13px] leading-[22px]">
-						{file.code}
-					</pre>
-				</div>
-			))}
-		</div>
-	);
+	return <CodeTabs tabs={snippets(domain)} className="mt-5" />;
 }
 
 function ResponseSample({ domain }: { domain: string }) {

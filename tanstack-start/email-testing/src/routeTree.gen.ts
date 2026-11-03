@@ -12,12 +12,16 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AcceptRouteImport } from './routes/accept'
+import { Route as ConsentRouteImport } from './routes/consent'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as ResetRouteImport } from './routes/reset'
 import { Route as SetupRouteImport } from './routes/setup'
+import { Route as DotwellKnownOauthProtectedResourceRouteImport } from './routes/[.]well-known/oauth-protected-resource'
 import { Route as AppInboxRouteImport } from './routes/_app/inbox'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppTestsRouteImport } from './routes/_app/tests'
+import { Route as DotwellKnownOauthProtectedResourceMcpRouteImport } from './routes/[.]well-known/oauth-protected-resource.mcp'
 import { Route as AppInboxIndexRouteImport } from './routes/_app/inbox.index'
 import { Route as AppInboxMessageIdRouteImport } from './routes/_app/inbox.$messageId'
 import { Route as ApiAttachmentsFileIdRouteImport } from './routes/api/attachments/$fileId'
@@ -40,9 +44,19 @@ const AcceptRoute = AcceptRouteImport.update({
   path: '/accept',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConsentRoute = ConsentRouteImport.update({
+  id: '/consent',
+  path: '/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetRoute = ResetRouteImport.update({
@@ -55,6 +69,12 @@ const SetupRoute = SetupRouteImport.update({
   path: '/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DotwellKnownOauthProtectedResourceRoute =
+  DotwellKnownOauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AppInboxRoute = AppInboxRouteImport.update({
   id: '/inbox',
   path: '/inbox',
@@ -70,6 +90,12 @@ const AppTestsRoute = AppTestsRouteImport.update({
   path: '/tests',
   getParentRoute: () => AppRoute,
 } as any)
+const DotwellKnownOauthProtectedResourceMcpRoute =
+  DotwellKnownOauthProtectedResourceMcpRouteImport.update({
+    id: '/mcp',
+    path: '/mcp',
+    getParentRoute: () => DotwellKnownOauthProtectedResourceRoute,
+  } as any)
 const AppInboxIndexRoute = AppInboxIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -109,12 +135,16 @@ const ApiPreviewIdRoute = ApiPreviewIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accept': typeof AcceptRoute
+  '/consent': typeof ConsentRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/reset': typeof ResetRoute
   '/setup': typeof SetupRoute
+  '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRouteWithChildren
   '/inbox': typeof AppInboxRouteWithChildren
   '/settings': typeof AppSettingsRoute
   '/tests': typeof AppTestsRoute
+  '/.well-known/oauth-protected-resource/mcp': typeof DotwellKnownOauthProtectedResourceMcpRoute
   '/inbox/$messageId': typeof AppInboxMessageIdRoute
   '/api/attachments/$fileId': typeof ApiAttachmentsFileIdRoute
   '/api/messages/$id': typeof ApiMessagesIdRoute
@@ -126,11 +156,15 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept': typeof AcceptRoute
+  '/consent': typeof ConsentRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/reset': typeof ResetRoute
   '/setup': typeof SetupRoute
+  '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRouteWithChildren
   '/settings': typeof AppSettingsRoute
   '/tests': typeof AppTestsRoute
+  '/.well-known/oauth-protected-resource/mcp': typeof DotwellKnownOauthProtectedResourceMcpRoute
   '/inbox/$messageId': typeof AppInboxMessageIdRoute
   '/api/attachments/$fileId': typeof ApiAttachmentsFileIdRoute
   '/api/messages/$id': typeof ApiMessagesIdRoute
@@ -144,12 +178,16 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/accept': typeof AcceptRoute
+  '/consent': typeof ConsentRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/reset': typeof ResetRoute
   '/setup': typeof SetupRoute
+  '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRouteWithChildren
   '/_app/inbox': typeof AppInboxRouteWithChildren
   '/_app/settings': typeof AppSettingsRoute
   '/_app/tests': typeof AppTestsRoute
+  '/.well-known/oauth-protected-resource/mcp': typeof DotwellKnownOauthProtectedResourceMcpRoute
   '/_app/inbox/$messageId': typeof AppInboxMessageIdRoute
   '/api/attachments/$fileId': typeof ApiAttachmentsFileIdRoute
   '/api/messages/$id': typeof ApiMessagesIdRoute
@@ -163,12 +201,16 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/accept'
+    | '/consent'
     | '/login'
+    | '/mcp'
     | '/reset'
     | '/setup'
+    | '/.well-known/oauth-protected-resource'
     | '/inbox'
     | '/settings'
     | '/tests'
+    | '/.well-known/oauth-protected-resource/mcp'
     | '/inbox/$messageId'
     | '/api/attachments/$fileId'
     | '/api/messages/$id'
@@ -180,11 +222,15 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/accept'
+    | '/consent'
     | '/login'
+    | '/mcp'
     | '/reset'
     | '/setup'
+    | '/.well-known/oauth-protected-resource'
     | '/settings'
     | '/tests'
+    | '/.well-known/oauth-protected-resource/mcp'
     | '/inbox/$messageId'
     | '/api/attachments/$fileId'
     | '/api/messages/$id'
@@ -197,12 +243,16 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/accept'
+    | '/consent'
     | '/login'
+    | '/mcp'
     | '/reset'
     | '/setup'
+    | '/.well-known/oauth-protected-resource'
     | '/_app/inbox'
     | '/_app/settings'
     | '/_app/tests'
+    | '/.well-known/oauth-protected-resource/mcp'
     | '/_app/inbox/$messageId'
     | '/api/attachments/$fileId'
     | '/api/messages/$id'
@@ -216,9 +266,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AcceptRoute: typeof AcceptRoute
+  ConsentRoute: typeof ConsentRoute
   LoginRoute: typeof LoginRoute
+  McpRoute: typeof McpRoute
   ResetRoute: typeof ResetRoute
   SetupRoute: typeof SetupRoute
+  DotwellKnownOauthProtectedResourceRoute: typeof DotwellKnownOauthProtectedResourceRouteWithChildren
   ApiAttachmentsFileIdRoute: typeof ApiAttachmentsFileIdRoute
   ApiMessagesIdRoute: typeof ApiMessagesIdRoute
   ApiMessagesWaitRoute: typeof ApiMessagesWaitRoute
@@ -249,11 +302,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AcceptRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/consent': {
+      id: '/consent'
+      path: '/consent'
+      fullPath: '/consent'
+      preLoaderRoute: typeof ConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset': {
@@ -268,6 +335,13 @@ declare module '@tanstack/react-router' {
       path: '/setup'
       fullPath: '/setup'
       preLoaderRoute: typeof SetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof DotwellKnownOauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/inbox': {
@@ -290,6 +364,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/tests'
       preLoaderRoute: typeof AppTestsRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/.well-known/oauth-protected-resource/mcp': {
+      id: '/.well-known/oauth-protected-resource/mcp'
+      path: '/mcp'
+      fullPath: '/.well-known/oauth-protected-resource/mcp'
+      preLoaderRoute: typeof DotwellKnownOauthProtectedResourceMcpRouteImport
+      parentRoute: typeof DotwellKnownOauthProtectedResourceRoute
     }
     '/_app/inbox/': {
       id: '/_app/inbox/'
@@ -371,13 +452,32 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface DotwellKnownOauthProtectedResourceRouteChildren {
+  DotwellKnownOauthProtectedResourceMcpRoute: typeof DotwellKnownOauthProtectedResourceMcpRoute
+}
+
+const DotwellKnownOauthProtectedResourceRouteChildren: DotwellKnownOauthProtectedResourceRouteChildren =
+  {
+    DotwellKnownOauthProtectedResourceMcpRoute:
+      DotwellKnownOauthProtectedResourceMcpRoute,
+  }
+
+const DotwellKnownOauthProtectedResourceRouteWithChildren =
+  DotwellKnownOauthProtectedResourceRoute._addFileChildren(
+    DotwellKnownOauthProtectedResourceRouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AcceptRoute: AcceptRoute,
+  ConsentRoute: ConsentRoute,
   LoginRoute: LoginRoute,
+  McpRoute: McpRoute,
   ResetRoute: ResetRoute,
   SetupRoute: SetupRoute,
+  DotwellKnownOauthProtectedResourceRoute:
+    DotwellKnownOauthProtectedResourceRouteWithChildren,
   ApiAttachmentsFileIdRoute: ApiAttachmentsFileIdRoute,
   ApiMessagesIdRoute: ApiMessagesIdRoute,
   ApiMessagesWaitRoute: ApiMessagesWaitRoute,

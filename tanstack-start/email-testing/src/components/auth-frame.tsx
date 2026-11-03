@@ -6,11 +6,14 @@ export function AuthFrame({
 	intro,
 	children,
 	host,
+	top,
 }: {
 	title: string;
 	intro?: ReactNode;
 	children?: ReactNode;
 	host?: string;
+	// Shown above the title, for example the two logos on the consent screen.
+	top?: ReactNode;
 }) {
 	return (
 		<div className="relative flex min-h-screen flex-col">
@@ -27,7 +30,10 @@ export function AuthFrame({
 					</span>
 				) : null}
 			</header>
-			<main className="relative z-10 mx-auto w-full max-w-[408px] flex-1 px-6 pt-16 sm:pt-[110px]">
+			<main
+				className={`relative z-10 mx-auto w-full max-w-[408px] flex-1 px-6 ${top ? "pt-10 sm:pt-[72px]" : "pt-16 sm:pt-[110px]"}`}
+			>
+				{top}
 				<h1 className="text-[32px] font-semibold leading-[38px] tracking-display">
 					{title}
 				</h1>

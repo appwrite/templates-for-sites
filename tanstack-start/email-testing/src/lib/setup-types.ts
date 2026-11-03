@@ -7,6 +7,7 @@ export type SetupStepId =
 	| "code"
 	| "trigger"
 	| "schedule"
+	| "agents"
 	| "release";
 
 export type StepStatus = "done" | "running" | "pending" | "failed";

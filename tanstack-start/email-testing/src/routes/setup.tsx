@@ -397,6 +397,7 @@ const PLAN = [
 	"Storage bucket for attachments",
 	"Function that receives mail, with its code",
 	"Email trigger and nightly cleanup",
+	"Sign-in for AI agents",
 	"Remove setup permissions",
 ];
 
