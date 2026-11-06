@@ -397,8 +397,10 @@ async function codeStatus(
 async function provisionView(
 	secret: string,
 	admin: { name: string; email: string },
+	known?: SetupPrefs,
 ): Promise<SetupView> {
-	const prefs = await loadPrefs(secret).catch(() => ({}) as SetupPrefs);
+	const prefs =
+		known ?? (await loadPrefs(secret).catch(() => ({}) as SetupPrefs));
 	const steps = await probeSteps(prefs);
 	const doneCount = steps.filter((s) => s.status === "done").length;
 	const next = steps.find((s) => s.status !== "done");
@@ -869,6 +871,13 @@ export async function runStep(stepId: SetupStepId): Promise<SetupView> {
 	let result: StepResult;
 	const errors = { ...(prefs.errors || {}) };
 	try {
+		if (stepId === "release" && !prefs.released) {
+			// Save the marker before the site update drops the setup scopes. If the request stops
+			// after that update, the next visit sees the marker and finishes setup instead of asking
+			// for the scopes back. If this save fails, the scopes stay and the step can be retried.
+			await savePrefs(session.secret, { ...prefs, released: true });
+			prefs.released = true;
+		}
 		result = await RUNNERS[stepId]();
 		delete errors[stepId];
 	} catch (err) {
@@ -878,13 +887,15 @@ export async function runStep(stepId: SetupStepId): Promise<SetupView> {
 			t: new Date().toISOString(),
 			text: `${stepId} failed: ${message}`,
 		});
-		await savePrefs(session.secret, {
+		const failed = {
 			...prefs,
 			log,
 			errors,
 			lastAt: new Date().toISOString(),
-		}).catch(() => undefined);
-		return provisionView(session.secret, admin);
+		};
+		await savePrefs(session.secret, failed).catch(() => undefined);
+		// Show the error even if saving it failed, so the step waits for Retry.
+		return provisionView(session.secret, admin, failed);
 	}
 
 	if (result.log) log.push({ t: new Date().toISOString(), text: result.log });
@@ -902,7 +913,7 @@ export async function runStep(stepId: SetupStepId): Promise<SetupView> {
 
 	if (stepId === "release" && result.status === "done") {
 		const scopes = scopeSummary();
-		await savePrefs(session.secret, { ...next, released: true });
+		await savePrefs(session.secret, next).catch(() => undefined);
 		await markComplete();
 		return { view: "complete", admin, domain: inboxDomain(), scopes, log };
 	}
