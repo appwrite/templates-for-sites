@@ -93,7 +93,7 @@ export const dropMember = createServerFn({ method: "POST" })
 export const clearInbox = createServerFn({ method: "POST" }).handler(() =>
 	guard(async () => {
 		await requireAdmin();
-		return { removed: await emptyInbox() };
+		return emptyInbox();
 	}),
 );
 

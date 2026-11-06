@@ -15,7 +15,7 @@ import type {
 	MessageDetail,
 	MessageSummary,
 } from "#/lib/types";
-import { adminClient } from "./appwrite";
+import { adminClient, errorCode } from "./appwrite";
 import { BUCKET_ID, DATABASE_ID, MESSAGES } from "./schema";
 
 type Row = Models.Row & Record<string, unknown>;
@@ -368,6 +368,33 @@ export async function getMessage(
 	};
 }
 
+// ---------- deleting ----------
+// A message row is the only record of its attachments' file IDs, so a row goes only once all its
+// files are gone. A file that fails to delete keeps its row for the next try. The inbox function's
+// nightly cleanup follows the same rule.
+
+function attachmentFileIds(row: Row) {
+	return parseJson<Attachment[]>(row.attachments, [])
+		.map((a) => a.fileId)
+		.filter((f): f is string => Boolean(f));
+}
+
+// Deletes the files and returns the IDs that are still there. One that's already gone counts.
+async function deleteFiles(
+	storage: Pick<Storage, "deleteFile">,
+	fileIds: string[],
+) {
+	const results = await Promise.allSettled(
+		fileIds.map((fileId) =>
+			storage.deleteFile({ bucketId: BUCKET_ID, fileId }),
+		),
+	);
+	return fileIds.filter((_, i) => {
+		const result = results[i];
+		return result.status === "rejected" && errorCode(result.reason) !== 404;
+	});
+}
+
 export async function deleteMessage(client: Client, id: string) {
 	const db = new TablesDB(client);
 	const row = await db.getRow<Row>({
@@ -375,53 +402,67 @@ export async function deleteMessage(client: Client, id: string) {
 		tableId: MESSAGES,
 		rowId: id,
 	});
-	const storage = new Storage(client);
-	for (const att of parseJson<Attachment[]>(row.attachments, [])) {
-		if (att.fileId)
-			await storage
-				.deleteFile({ bucketId: BUCKET_ID, fileId: att.fileId })
-				.catch(() => undefined);
-	}
+	const failed = await deleteFiles(new Storage(client), attachmentFileIds(row));
+	if (failed.length)
+		throw new Error(
+			`Couldn't delete ${failed.length === 1 ? "an attachment" : `${failed.length} attachments`}, so the message is still here. Try again.`,
+		);
 	await db.deleteRow({ databaseId: DATABASE_ID, tableId: MESSAGES, rowId: id });
 }
 
-// Uses the site's key: rows.write and files.write.
-export async function emptyInbox() {
-	const client = adminClient();
-	const db = new TablesDB(client);
-	const storage = new Storage(client);
-	const started = Date.now();
+// Deletes every message and its files until the deadline. Returns how many messages went, and
+// how many stayed because an attachment couldn't be deleted.
+export async function removeMessages(
+	db: Pick<TablesDB, "listRows" | "deleteRows">,
+	storage: Pick<Storage, "deleteFile">,
+	deadline: number,
+) {
 	let removed = 0;
-	while (Date.now() - started < 20_000) {
-		const page = await db.listRows<Row>({
-			databaseId: DATABASE_ID,
-			tableId: MESSAGES,
-			queries: [Query.select(["$id", "attachments"]), Query.limit(100)],
-		});
-		if (page.rows.length === 0) break;
-		const fileIds = page.rows.flatMap((row) =>
-			parseJson<Attachment[]>(row.attachments, [])
-				.map((a) => a.fileId)
-				.filter((f): f is string => Boolean(f)),
-		);
-		await Promise.allSettled(
-			fileIds.map((fileId) =>
-				storage.deleteFile({ bucketId: BUCKET_ID, fileId }),
-			),
-		);
-		await db.deleteRows({
+	let kept = 0;
+	// Rows come back in the order they were created. Everything before the last kept row is either
+	// deleted or kept, so the next page starts after it.
+	let after: string | null = null;
+	while (Date.now() < deadline) {
+		const page: Models.RowList<Row> = await db.listRows<Row>({
 			databaseId: DATABASE_ID,
 			tableId: MESSAGES,
 			queries: [
-				Query.equal(
-					"$id",
-					page.rows.map((r) => r.$id),
-				),
+				Query.select(["$id", "attachments"]),
+				Query.limit(100),
+				...(after ? [Query.cursorAfter(after)] : []),
 			],
 		});
-		removed += page.rows.length;
+		if (page.rows.length === 0) break;
+		const stuck = new Set(
+			await deleteFiles(storage, page.rows.flatMap(attachmentFileIds)),
+		);
+		const cleared: string[] = [];
+		for (const row of page.rows) {
+			if (attachmentFileIds(row).some((f) => stuck.has(f))) {
+				kept++;
+				after = row.$id;
+			} else cleared.push(row.$id);
+		}
+		if (cleared.length) {
+			await db.deleteRows({
+				databaseId: DATABASE_ID,
+				tableId: MESSAGES,
+				queries: [Query.equal("$id", cleared)],
+			});
+			removed += cleared.length;
+		}
 	}
-	return removed;
+	return { removed, kept };
+}
+
+// Uses the site's key: rows.write and files.write.
+export function emptyInbox() {
+	const client = adminClient();
+	return removeMessages(
+		new TablesDB(client),
+		new Storage(client),
+		Date.now() + 20_000,
+	);
 }
 
 // ---------- CI API ----------

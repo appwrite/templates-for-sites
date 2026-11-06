@@ -10,13 +10,9 @@ import {
 	replaceRecoveryCodes,
 	startTwoStep,
 } from "#/functions/two-step";
+import { errorText } from "#/lib/errors";
 import { qrPath } from "#/lib/qr";
-import {
-	errorText,
-	groupSecret,
-	otpauthLabel,
-	recoveryCodesFile,
-} from "#/lib/two-step";
+import { groupSecret, otpauthLabel, recoveryCodesFile } from "#/lib/two-step";
 
 type Setup = { linked: false; secret: string; uri: string } | { linked: true };
 type Mode =

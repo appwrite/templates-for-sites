@@ -8,7 +8,8 @@ import {
 	submitSignIn,
 	submitSignOut,
 } from "#/functions/session";
-import { type CodeKind, errorText } from "#/lib/two-step";
+import { errorText } from "#/lib/errors";
+import type { CodeKind } from "#/lib/two-step";
 
 // Which codes the code step takes: one from the authenticator app, a recovery code, or both.
 export type SecondFactors = { app: boolean; recovery: boolean };

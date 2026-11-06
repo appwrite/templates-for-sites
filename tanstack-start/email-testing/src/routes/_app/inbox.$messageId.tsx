@@ -6,6 +6,7 @@ import { useInbox } from "#/components/inbox-context";
 import { PlainTextView } from "#/components/plain-text-view";
 import { fetchMessage, removeMessage } from "#/functions/inbox";
 import { previewDocument } from "#/lib/email-preview";
+import { errorText } from "#/lib/errors";
 import { bytes, clock, longDate } from "#/lib/format";
 import type { Check, MessageDetail } from "#/lib/types";
 
@@ -192,7 +193,12 @@ function MessageView({ message }: { message: MessageDetail }) {
 					aria-label="Delete message"
 					onClick={async () => {
 						if (!confirm("Delete this message and its attachments?")) return;
-						await removeMessage({ data: { id: message.id } });
+						try {
+							await removeMessage({ data: { id: message.id } });
+						} catch (err) {
+							alert(errorText(err));
+							return;
+						}
 						remove(message.id);
 						if (next || prev) go((next || prev)?.id);
 						else navigate({ to: "/inbox", search });

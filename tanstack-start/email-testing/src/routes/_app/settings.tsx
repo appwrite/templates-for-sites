@@ -15,6 +15,7 @@ import {
 	sendInvite,
 } from "#/functions/settings";
 import { fetchTwoStep } from "#/functions/two-step";
+import { errorText } from "#/lib/errors";
 import { ago, initials } from "#/lib/format";
 import type { MemberInfo } from "#/lib/types";
 
@@ -455,9 +456,13 @@ function EmptyInbox({ count }: { count: number }) {
 						return;
 					setBusy(true);
 					try {
-						const { removed } = await clearInbox();
-						setResult(`Deleted ${removed} message${removed === 1 ? "" : "s"}.`);
+						const { removed, kept } = await clearInbox();
+						setResult(
+							`Deleted ${removed} message${removed === 1 ? "" : "s"}.${kept ? ` ${kept} ${kept === 1 ? "message is" : "messages are"} still here because an attachment couldn't be deleted. Try again.` : ""}`,
+						);
 						await router.invalidate();
+					} catch (err) {
+						setResult(errorText(err));
 					} finally {
 						setBusy(false);
 					}
