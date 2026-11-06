@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Icon, type IconName, Logo } from "#/components/icons";
+import { LiveTokenProvider } from "#/components/live-status";
 import { fetchInbox } from "#/functions/inbox";
 import { fetchViewer, submitSignOut } from "#/functions/session";
 import { initials, splitDomain } from "#/lib/format";
@@ -85,7 +86,9 @@ function AppLayout() {
 					<Logo size={22} />
 					<span className="font-semibold">Catchall</span>
 				</div>
-				<Outlet />
+				<LiveTokenProvider>
+					<Outlet />
+				</LiveTokenProvider>
 			</div>
 		</div>
 	);

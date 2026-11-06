@@ -1,7 +1,24 @@
 import { useRouter } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import {
+	createContext,
+	type ReactNode,
+	useContext,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import { fetchRealtimeToken } from "#/functions/realtime";
-import { LiveConnection, type LiveStatus } from "#/lib/live";
+import { LiveConnection, type LiveStatus, type StoredToken } from "#/lib/live";
+
+// Keeps the realtime JWT while someone moves around the app, so coming back to the inbox reuses
+// it instead of asking Appwrite for a new one. It lives in the app layout, so signing out, which
+// leaves that layout, drops it.
+const TokenStore = createContext<{ current: StoredToken | null } | null>(null);
+
+export function LiveTokenProvider({ children }: { children: ReactNode }) {
+	const store = useRef<StoredToken | null>(null);
+	return <TokenStore.Provider value={store}>{children}</TokenStore.Provider>;
+}
 
 const LABELS: Record<LiveStatus, string> = {
 	connecting: "Connecting",
@@ -47,6 +64,7 @@ export function LiveIndicator({
 // after a reconnect, when events may have been missed.
 export function useLiveInbox(onChange: () => void): LiveStatus {
 	const router = useRouter();
+	const tokenStore = useContext(TokenStore);
 	const [status, setStatus] = useState<LiveStatus>("connecting");
 	const latest = useRef(onChange);
 	latest.current = onChange;
@@ -54,6 +72,7 @@ export function useLiveInbox(onChange: () => void): LiveStatus {
 	useEffect(() => {
 		const live = new LiveConnection({
 			fetchToken: () => fetchRealtimeToken(),
+			tokenStore: tokenStore ?? undefined,
 			onEvent: () => latest.current(),
 			// Also on the first connect: mail can land between the page loading and the socket
 			// subscribing.
@@ -84,7 +103,7 @@ export function useLiveInbox(onChange: () => void): LiveStatus {
 			window.removeEventListener("offline", onOffline);
 			live.stop();
 		};
-	}, [router]);
+	}, [router, tokenStore]);
 
 	return status;
 }
