@@ -52,6 +52,9 @@ export type LiveOptions = {
 	// fetch again, because events sent while it was away are not replayed.
 	onConnected: (info: { reconnect: boolean }) => void;
 	onStatus: (status: LiveStatus) => void;
+	// Holds the JWT for the next connection in this tab, so a page that mounts again reuses it
+	// while it has time left instead of asking Appwrite for another.
+	tokenStore?: { current: StoredToken | null };
 	createSocket?: (url: string) => SocketLike;
 	now?: () => number;
 	isOnline?: () => boolean;
@@ -77,6 +80,10 @@ const MIN_ROTATE_MS = 5_000;
 // A token request or a socket handshake that takes longer than this is given up and retried.
 export const CONNECT_TIMEOUT_MS = 15_000;
 export const BACKOFF_MS = [1_000, 2_000, 4_000, 8_000, 15_000, 30_000];
+// A socket has to stay subscribed this long before a drop retries at the shortest wait again.
+// Otherwise one that Appwrite closes soon after subscribing would reconnect, get a JWT and
+// refetch the inbox about once a second.
+export const STABLE_MS = 60_000;
 
 // Appwrite closes with 1008 (policy violation) when the JWT is expired or invalid.
 const CLOSE_POLICY = 1008;
@@ -112,7 +119,8 @@ export function secondsLeft(jwt: string, nowMs: number, fallback: number) {
 	}
 }
 
-type Token = RealtimeToken & { expiresAt: number };
+export type StoredToken = RealtimeToken & { expiresAt: number };
+type Token = StoredToken;
 
 export class LiveConnection {
 	private readonly options: Required<LiveOptions>;
@@ -131,6 +139,8 @@ export class LiveConnection {
 	private tokenRequest: Promise<Token | "signed-out"> | null = null;
 	private socketOpenedAt = 0;
 	private nextOpenedAt = 0;
+	// When the current socket was subscribed, or 0.
+	private liveSince = 0;
 	private lastFrameAt = 0;
 	private lastPingAt = 0;
 	private lastTickAt = 0;
@@ -146,6 +156,7 @@ export class LiveConnection {
 				typeof navigator === "undefined" ? true : navigator.onLine !== false,
 			random: Math.random,
 			...options,
+			tokenStore: options.tokenStore ?? { current: null },
 		};
 	}
 
@@ -155,6 +166,7 @@ export class LiveConnection {
 
 	start() {
 		this.stopped = false;
+		this.token ??= this.options.tokenStore.current;
 		this.lastTickAt = this.now();
 		this.tickTimer = setInterval(() => this.tick(), TICK_MS);
 		void this.open();
@@ -302,7 +314,7 @@ export class LiveConnection {
 				}
 				const reconnect = this.connectedOnce;
 				this.connectedOnce = true;
-				this.attempt = 0;
+				this.liveSince = this.now();
 				this.lastPingAt = this.now();
 				this.setStatus("live");
 				this.scheduleRotate();
@@ -325,7 +337,7 @@ export class LiveConnection {
 					(Number(data.code) === CLOSE_POLICY || Number(data.code) === 401) &&
 					(socket === this.next || !this.next)
 				)
-					this.token = null;
+					this.forgetToken();
 				return;
 			default:
 				return;
@@ -335,7 +347,7 @@ export class LiveConnection {
 	private onClose(socket: SocketLike, code: number) {
 		if (socket === this.next) {
 			// The rotation failed. Keep the old socket and try again.
-			if (code === CLOSE_POLICY) this.token = null;
+			if (code === CLOSE_POLICY) this.forgetToken();
 			this.next = null;
 			if (!this.stopped) this.scheduleRotate(this.backoff());
 			return;
@@ -343,8 +355,9 @@ export class LiveConnection {
 		if (socket !== this.socket) return;
 		// A policy close means this socket's JWT is spent. During a rotation, this.token is
 		// already the new socket's.
-		if (code === CLOSE_POLICY && !this.next) this.token = null;
+		if (code === CLOSE_POLICY && !this.next) this.forgetToken();
 		this.socket = null;
+		this.settleBackoff();
 		if (this.stopped) return;
 		this.setStatus(this.options.isOnline() ? "reconnecting" : "offline");
 		if (this.next) {
@@ -360,6 +373,7 @@ export class LiveConnection {
 
 	private reconnectNow() {
 		if (this.stopped) return;
+		this.settleBackoff();
 		this.clearTimer("retry");
 		const old = this.socket;
 		this.socket = null;
@@ -415,6 +429,7 @@ export class LiveConnection {
 			if (result.status !== "ok") return "signed-out";
 			const { status: _status, ...token } = result;
 			this.token = { ...token, expiresAt: this.now() + token.expiresIn * 1000 };
+			this.options.tokenStore.current = this.token;
 			return this.token;
 		} finally {
 			if (timer) clearTimeout(timer);
@@ -423,6 +438,13 @@ export class LiveConnection {
 
 	private clearTokenRequest(request: Promise<unknown>) {
 		if (this.tokenRequest === request) this.tokenRequest = null;
+	}
+
+	// Appwrite rejected the JWT, so neither this connection nor the next one should use it.
+	private forgetToken() {
+		if (this.options.tokenStore.current === this.token)
+			this.options.tokenStore.current = null;
+		this.token = null;
 	}
 
 	// ---------- timers ----------
@@ -468,6 +490,13 @@ export class LiveConnection {
 		} catch {
 			// The close event handles it.
 		}
+	}
+
+	// The socket went away. Retry at the shortest wait only if it had been live a while.
+	private settleBackoff() {
+		if (this.liveSince && this.now() - this.liveSince >= STABLE_MS)
+			this.attempt = 0;
+		this.liveSince = 0;
 	}
 
 	private backoff() {

@@ -11,6 +11,8 @@ import {
 	realtimeEndpoint,
 	SLEEP_GAP_MS,
 	type SocketLike,
+	STABLE_MS,
+	type StoredToken,
 	secondsLeft,
 	socketUrl,
 	TICK_MS,
@@ -62,7 +64,13 @@ class FakeSocket implements SocketLike {
 
 const CHANNEL = "tablesdb.catchall.tables.messages.rows";
 
-function setup(options: { tokens?: TokenResult[]; online?: boolean } = {}) {
+function setup(
+	options: {
+		tokens?: TokenResult[];
+		online?: boolean;
+		store?: { current: StoredToken | null };
+	} = {},
+) {
 	const sockets: FakeSocket[] = [];
 	const statuses: LiveStatus[] = [];
 	const events: string[][] = [];
@@ -94,6 +102,7 @@ function setup(options: { tokens?: TokenResult[]; online?: boolean } = {}) {
 		},
 		isOnline: () => online,
 		random: () => 0.5, // No jitter, so backoff delays are exact.
+		tokenStore: options.store,
 	});
 	return {
 		live,
@@ -311,6 +320,66 @@ describe("LiveConnection", () => {
 		expect(t.live.current).toBe("live");
 		// Back after a drop: the page refetches what it missed.
 		expect(t.connects).toEqual([false, true]);
+		t.live.stop();
+	});
+
+	it("backs off when Appwrite keeps closing the socket soon after subscribing", async () => {
+		const t = setup();
+		t.live.start();
+		await flush();
+		for (const wait of BACKOFF_MS.slice(0, 3)) {
+			t.last().connected();
+			t.last().drop(1011);
+			const before = t.sockets.length;
+			await vi.advanceTimersByTimeAsync(wait - 1);
+			expect(t.sockets).toHaveLength(before);
+			await vi.advanceTimersByTimeAsync(1);
+			expect(t.sockets).toHaveLength(before + 1);
+		}
+		// One refetch per reconnect, at the growing waits, not one a second.
+		expect(t.connects).toEqual([false, true, true]);
+		// A socket that stays up a while earns the shortest wait back.
+		t.last().connected();
+		await vi.advanceTimersByTimeAsync(STABLE_MS);
+		t.last().drop(1011);
+		await vi.advanceTimersByTimeAsync(BACKOFF_MS[0]);
+		expect(t.sockets).toHaveLength(5);
+		expect(t.fetchToken).toHaveBeenCalledTimes(1);
+		t.live.stop();
+	});
+
+	it("reuses the tab's JWT when the inbox mounts again", async () => {
+		const store = { current: null as StoredToken | null };
+		const first = setup({ store });
+		first.live.start();
+		await flush();
+		first.last().connected();
+		first.live.stop();
+		// Settings, then back to the inbox ten minutes later.
+		await vi.advanceTimersByTimeAsync(10 * 60_000);
+		const second = setup({ store });
+		second.live.start();
+		await flush();
+		expect(second.fetchToken).not.toHaveBeenCalled();
+		expect(second.last().jwt).toBe("jwt-1");
+		second.last().connected();
+		// It rotates on the first JWT's schedule: 13 minutes after that JWT was made.
+		await vi.advanceTimersByTimeAsync(3 * 60_000 - ROTATE_BEFORE_MS / 2);
+		expect(second.fetchToken).not.toHaveBeenCalled();
+		await vi.advanceTimersByTimeAsync(ROTATE_BEFORE_MS / 2);
+		expect(second.fetchToken).toHaveBeenCalledOnce();
+		second.live.stop();
+	});
+
+	it("forgets the tab's JWT once Appwrite rejects it", async () => {
+		const store = { current: null as StoredToken | null };
+		const t = setup({ store });
+		t.live.start();
+		await flush();
+		t.last().connected();
+		expect(store.current?.jwt).toBe("jwt-1");
+		t.last().drop(1008);
+		expect(store.current).toBeNull();
 		t.live.stop();
 	});
 

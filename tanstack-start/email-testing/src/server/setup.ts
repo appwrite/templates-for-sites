@@ -84,7 +84,7 @@ type SetupPrefs = {
 const BUILDING = ["waiting", "processing", "building"];
 
 // The function's code is the node/email-testing-inbox template, deployed from this appwrite/templates release.
-const FUNCTION_TEMPLATE_TAG = "1.5.0";
+const FUNCTION_TEMPLATE_TAG = "1.5.1";
 
 // ---------- small helpers ----------
 

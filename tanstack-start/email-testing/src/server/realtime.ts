@@ -18,11 +18,13 @@ export async function createRealtimeToken(
 	const { endpoint, projectId } = appwriteEnv();
 	const client = sessionClient(secret);
 	// The server SDK leaves out account.createJWT, which is a client-side method, so this calls
-	// the endpoint directly with the session.
+	// the endpoint directly with the session. client.call() sends only the headers it's given plus
+	// the client's own, and the project ID isn't one of those. Without it, Appwrite treats the
+	// request as a Console request and rejects the site's origin.
 	const response = (await client.call(
 		"post",
 		new URL(`${endpoint}/account/jwts`),
-		{ "content-type": "application/json" },
+		{ "X-Appwrite-Project": projectId, "content-type": "application/json" },
 		{ duration: REALTIME_JWT_SECONDS },
 	)) as { jwt?: string };
 	const jwt = String(response?.jwt || "");

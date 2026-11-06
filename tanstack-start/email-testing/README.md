@@ -26,7 +26,7 @@ Setup then creates everything with the site's own key. You never paste an API ke
 | Team | The `catchall` team, with you as owner (admin) |
 | Database | `catchall`, with the `messages`, `tokens` and `settings` tables |
 | Storage | The `attachments` bucket (25 MB per file) |
-| Function | `inbox` (Node 22), deployed from the [`node/email-testing-inbox`](https://github.com/appwrite/templates/tree/1.5.0/node/email-testing-inbox) template in the `appwrite/templates` 1.5.0 release, with its email trigger and a nightly cleanup at 03:00 UTC |
+| Function | `inbox` (Node 22), deployed from the [`node/email-testing-inbox`](https://github.com/appwrite/templates/tree/1.5.1/node/email-testing-inbox) template in the `appwrite/templates` 1.5.1 release, with its email trigger and a nightly cleanup at 03:00 UTC |
 | Sign-in for AI agents | Turns on the project's OAuth server, points its authorization URL at this site's `/consent` page and adds the `catchall.read` scope. Other OAuth server settings stay as they are. If the server already sends people to another app, setup leaves it alone and says so. |
 | Permissions | Removes the scopes only setup needed from this site |
 
@@ -160,4 +160,4 @@ The session secret stays in an httpOnly cookie that page scripts can't read. The
 - `src/routes`: pages, the CI API, `/mcp` and `/consent` (TanStack Start).
 - `src/server`: server code that talks to Appwrite. `setup.ts` holds the setup steps, `mcp.ts` the MCP tools, `oauth.ts` the agent sign-in and `mfa.ts` two-step sign-in.
 
-The function that receives mail isn't in this folder. It's the [`node/email-testing-inbox`](https://github.com/appwrite/templates/tree/1.5.0/node/email-testing-inbox) template in `appwrite/templates`, and setup deploys it from the release that `FUNCTION_TEMPLATE_TAG` in `src/server/setup.ts` names, currently 1.5.0.
+The function that receives mail isn't in this folder. It's the [`node/email-testing-inbox`](https://github.com/appwrite/templates/tree/1.5.1/node/email-testing-inbox) template in `appwrite/templates`, and setup deploys it from the release that `FUNCTION_TEMPLATE_TAG` in `src/server/setup.ts` names, currently 1.5.1.
