@@ -1,0 +1,163 @@
+# Catchall: email testing inbox
+
+A shared test inbox for your team, built on Appwrite Sites and Appwrite Function email triggers. Send mail from your app to any name at your project's `appwrite.email` domain, then read it in the browser or wait for it from your tests.
+
+- Every name works: `signup-123@inbox-<project-id>.appwrite.email` exists the moment you send to it.
+- New mail shows up in the inbox as it arrives, over Appwrite Realtime.
+- Verification codes and links are pulled out of each message.
+- The message view shows the HTML (sandboxed), the text, headers, attachments and basic checks: TLS, spam score, local links, missing text part, Gmail clipping.
+- A CI endpoint holds the request until mail arrives, so a test can wait for an email the same way it waits for a page.
+- AI agents such as Claude Code, Cursor and Codex can read the inbox over MCP. Each person signs in with their own account, and nobody pastes a key.
+- Anyone can turn on two-step sign-in with an authenticator app, with single-use recovery codes as a backup.
+- Messages and attachments are deleted after a retention period you pick (1 to 30 days).
+
+Email triggers run on **Appwrite Cloud** only. On self-hosted Appwrite, `/setup` stops before it creates anything.
+
+## Deploy
+
+1. Create the site from this template in the Appwrite Console.
+2. Open `/setup` on the site's domain.
+3. Create the admin account. The first person to finish this step becomes the admin.
+
+Setup then creates everything with the site's own key. You never paste an API key:
+
+| Step | What it creates |
+| --- | --- |
+| Team | The `catchall` team, with you as owner (admin) |
+| Database | `catchall`, with the `messages`, `tokens` and `settings` tables |
+| Storage | The `attachments` bucket (25 MB per file) |
+| Function | `inbox` (Node 22), deployed from the [`node/email-testing-inbox`](https://github.com/appwrite/templates/tree/1.5.0/node/email-testing-inbox) template in the `appwrite/templates` 1.5.0 release, with its email trigger and a nightly cleanup at 03:00 UTC |
+| Sign-in for AI agents | Turns on the project's OAuth server, points its authorization URL at this site's `/consent` page and adds the `catchall.read` scope. Other OAuth server settings stay as they are. If the server already sends people to another app, setup leaves it alone and says so. |
+| Permissions | Removes the scopes only setup needed from this site |
+
+You can close the tab during setup. Reopen `/setup` and sign in to continue where you left off.
+
+## Scopes
+
+Appwrite Sites gives every request a short-lived key with the scopes set on the site. Catchall reads those scopes from the key on each request.
+
+The template asks for 17 scopes. When setup finishes, the site removes 12 of them from itself and keeps 5:
+
+| Scope | Kept after setup | Used for |
+| --- | --- | --- |
+| `rows.read` | Yes | The CI API, and checking that setup finished |
+| `rows.write` | Yes | Settings, API tokens, and emptying the inbox |
+| `files.read` | Yes | Attachment downloads from the CI API |
+| `files.write` | Yes | Deleting attachments when you empty the inbox |
+| `teams.read` | Yes | Checking whether an admin exists, and that an AI agent's account is still on the team |
+| `databases.read`, `databases.write` | No | Creating the database |
+| `tables.read`, `tables.write` | No | Creating the tables, with columns and indexes |
+| `buckets.read`, `buckets.write` | No | Creating the attachments bucket |
+| `functions.read`, `functions.write` | No | Deploying the function and turning on its email trigger |
+| `project.read`, `project.write` | No | Turning on the project's OAuth server so AI agents can sign in |
+| `sites.read`, `sites.write` | No | Removing the setup scopes from this site |
+
+`project.write` covers every project setting, including deleting the project. Setup only uses it to update the OAuth server, then gives it back.
+
+If the site was deployed without these scopes, `/setup` lists the missing ones. Add them under **Sites → your site → Settings → Build → Scopes**, then select **Check again**. You don't need to redeploy.
+
+The function gets its own 3 scopes: `rows.read`, `rows.write` and `files.write`.
+
+Signing in, password resets and invites don't use the site's key. They go to Appwrite like any client request, so Appwrite's own rate limits apply.
+
+## Use it from tests
+
+1. Open **Tests & API** and create a token. Tokens expire after 90 days.
+2. Store it in CI as `CATCHALL_TOKEN`, and the site's URL as `CATCHALL_URL`.
+3. Wait for mail:
+
+```ts
+const url = new URL("/api/messages/wait", process.env.CATCHALL_URL);
+url.searchParams.set("to", `signup-${Date.now()}@inbox-<project-id>.appwrite.email`);
+url.searchParams.set("timeout", "20");
+
+const res = await fetch(url, {
+  headers: { Authorization: `Bearer ${process.env.CATCHALL_TOKEN}` },
+});
+const email = await res.json(); // { subject, codes, links, text, html, attachments, ... }
+```
+
+| Endpoint | Returns |
+| --- | --- |
+| `GET /api/messages/wait?to=&timeout=&since=` | The newest message for `to`, once it arrives. `timeout` is in seconds, up to 25 (default 20). `since` ignores older mail. 404 if nothing arrives in time. |
+| `GET /api/messages?to=` | The newest message for `to`, without waiting. 404 if there's none. |
+| `GET /api/messages/:id` | One message. |
+| `GET /api/attachments/:fileId` | An attachment. The URLs in message responses point here. |
+
+`to` takes the full address or only the part before the `@`. Send the token as `Authorization: Bearer ctk_...` or in an `X-Catchall-Token` header. Every endpoint returns 401 for a missing or expired token.
+
+## Connect an AI agent
+
+The MCP server is at `https://<your-site>/mcp`. **Settings → Connect an AI agent** shows the URL and the setup for each client:
+
+| Client | Setup |
+| --- | --- |
+| Claude Code | `claude mcp add --transport http catchall https://<your-site>/mcp`, then run `/mcp`, pick catchall and choose **Authenticate** |
+| Cursor | Add `{"mcpServers": {"catchall": {"url": "https://<your-site>/mcp"}}}` to `~/.cursor/mcp.json`, then select **Connect** under **Settings → MCP** |
+| Codex | Add `[mcp_servers.catchall]` with `url = "https://<your-site>/mcp"` to `~/.codex/config.toml`, then run `codex mcp login catchall` |
+
+Agents get four read-only tools. They can't send, change or delete mail.
+
+| Tool | Returns |
+| --- | --- |
+| `list_messages` | Recent messages, newest first. Filter by address (`to`), by time (`since`) and to unread mail. |
+| `get_message` | One message: both bodies, codes, links, attachments and checks. |
+| `wait_for_message` | The first message to an address once it arrives, waiting up to 25 seconds per call. |
+| `get_latest_code` | The newest verification code and action link sent to an address, optionally waiting for it. |
+
+### How agent sign-in works
+
+`/mcp` is a Streamable HTTP endpoint. Without a token it returns 401 with a `WWW-Authenticate` header that points to `/.well-known/oauth-protected-resource/mcp`. That document names the project's OAuth server (`https://<region>.cloud.appwrite.io/v1/oauth2/<project-id>`), so the client registers itself, opens a browser and sends the person to the authorization URL, which is this site's `/consent` page.
+
+`/consent` signs the person in, shows what the agent asks for and approves or rejects the request through the OAuth server. Only members of the `catchall` team can approve. Anyone else can only send the agent away.
+
+On each request to `/mcp`, the site checks the access token's signature against the project's keys, then its issuer, audience, expiry and the `catchall.read` scope. It then checks that the person is still on the team.
+
+- **Removing someone from the team** cuts off their agents on the next request.
+- **Revoking an agent's access in Appwrite** takes effect when its access token expires, within an hour. The site checks tokens itself and doesn't ask Appwrite on every request.
+- **The token must name this server.** Clients send the MCP URL as the OAuth `resource` parameter, as the MCP specification requires. The consent page refuses requests for another server or for none.
+- **Use the domain setup ran on.** Setup points the OAuth server at `/consent` on that domain, and tokens name the MCP URL on that domain. If you move the site to another domain, update the authorization URL in the Console.
+
+## Two-step sign-in
+
+Each person can turn on two-step sign-in for their own account under **Settings → Security**. It uses Appwrite's account MFA with that person's session, not the site's key.
+
+1. Scan the QR code with an authenticator app, or enter the key by hand. The app lists it under the Appwrite project's name.
+2. Enter the 6-digit code from the app. Two-step sign-in only turns on once a code checks out.
+3. Save the 6 recovery codes. They're shown once, with **Copy** and **Download**.
+
+From then on, signing in asks for a code after the password, on `/login` and on the consent screen for AI agents. A recovery code works once in place of an app code. The person's other signed-in browsers ask for a code on their next page load.
+
+To turn it off or get new recovery codes, enter a current code from the app or a recovery code.
+
+Appwrite only accepts the code for the current 30 seconds, so a code entered as it changes fails and the next one works. If someone loses their phone and their recovery codes, a project owner can turn off MFA for them in the Console under **Auth → Users**.
+
+## Run locally
+
+The app needs the key that Appwrite Sites adds to each request, so run setup on a deployed site first. To work on the UI against that project afterwards, create `.env`:
+
+```env
+APPWRITE_ENDPOINT=https://<region>.cloud.appwrite.io/v1
+APPWRITE_PROJECT_ID=<project-id>
+APPWRITE_API_KEY=<a key with rows.read, rows.write, files.read, files.write and teams.read>
+```
+
+Then run:
+
+```bash
+npm install
+npm run dev
+```
+
+Appwrite Realtime only accepts pages from hostnames the project knows. A deployed site's own domain is one of them. To get live updates on `localhost`, add a Web platform with the hostname `localhost` to the project. Without it, the inbox shows **Reconnecting** and you reload the page to see new mail.
+
+### How live updates work
+
+The session secret stays in an httpOnly cookie that page scripts can't read. The page asks the server for a JWT made from that session (`POST /v1/account/jwts`, 15 minutes), and opens a Realtime socket on the `tablesdb.catchall.tables.messages.rows` channel with it. Appwrite closes a JWT connection once the JWT expires, so the page opens a new socket with a new JWT two minutes before then, and closes the old one once the new one is subscribed. After a dropped connection, a sleeping laptop or a network change it reconnects and fetches the list again, because events sent while it was away are not replayed.
+
+## Project layout
+
+- `src/routes`: pages, the CI API, `/mcp` and `/consent` (TanStack Start).
+- `src/server`: server code that talks to Appwrite. `setup.ts` holds the setup steps, `mcp.ts` the MCP tools, `oauth.ts` the agent sign-in and `mfa.ts` two-step sign-in.
+
+The function that receives mail isn't in this folder. It's the [`node/email-testing-inbox`](https://github.com/appwrite/templates/tree/1.5.0/node/email-testing-inbox) template in `appwrite/templates`, and setup deploys it from the release that `FUNCTION_TEMPLATE_TAG` in `src/server/setup.ts` names, currently 1.5.0.
