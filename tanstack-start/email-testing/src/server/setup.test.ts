@@ -257,7 +257,7 @@ describe("the function code step", () => {
 				owner: "appwrite",
 				rootDirectory: "node/email-testing-inbox",
 				type: "tag",
-				reference: "1.5.0",
+				reference: "1.5.1",
 				activate: true,
 			},
 		]);
