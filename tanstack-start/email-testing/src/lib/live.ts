@@ -294,6 +294,7 @@ export class LiveConnection {
 					this.socket = socket;
 					this.next = null;
 					this.drop(old);
+					this.clearTimer("retry");
 					this.attempt = 0;
 					this.lastPingAt = this.now();
 					this.scheduleRotate();
@@ -318,8 +319,12 @@ export class LiveConnection {
 				});
 				return;
 			case "error":
-				// The JWT is invalid or expired. Don't reuse it.
-				if (Number(data.code) === CLOSE_POLICY || Number(data.code) === 401)
+				// The JWT is invalid or expired. Don't reuse it, unless the error is about the old
+				// socket's JWT while a rotation's socket uses the new one.
+				if (
+					(Number(data.code) === CLOSE_POLICY || Number(data.code) === 401) &&
+					(socket === this.next || !this.next)
+				)
 					this.token = null;
 				return;
 			default:
@@ -328,17 +333,28 @@ export class LiveConnection {
 	}
 
 	private onClose(socket: SocketLike, code: number) {
-		if (code === CLOSE_POLICY) this.token = null;
 		if (socket === this.next) {
 			// The rotation failed. Keep the old socket and try again.
+			if (code === CLOSE_POLICY) this.token = null;
 			this.next = null;
 			if (!this.stopped) this.scheduleRotate(this.backoff());
 			return;
 		}
 		if (socket !== this.socket) return;
+		// A policy close means this socket's JWT is spent. During a rotation, this.token is
+		// already the new socket's.
+		if (code === CLOSE_POLICY && !this.next) this.token = null;
 		this.socket = null;
 		if (this.stopped) return;
 		this.setStatus(this.options.isOnline() ? "reconnecting" : "offline");
+		if (this.next) {
+			// A rotation's socket is still handshaking. It takes over instead of a retry, and once
+			// it's subscribed the page fetches what it missed in between, like after any drop.
+			this.socket = this.next;
+			this.socketOpenedAt = this.nextOpenedAt;
+			this.next = null;
+			return;
+		}
 		this.scheduleRetry();
 	}
 

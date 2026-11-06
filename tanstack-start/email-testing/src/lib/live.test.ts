@@ -226,6 +226,53 @@ describe("LiveConnection", () => {
 		t.live.stop();
 	});
 
+	it("lets a rotation's socket take over when the old one closes first", async () => {
+		const t = setup();
+		t.live.start();
+		await flush();
+		const first = t.last();
+		first.connected();
+		await vi.advanceTimersByTimeAsync(900_000 - ROTATE_BEFORE_MS);
+		const second = t.last();
+		expect(t.sockets).toHaveLength(2);
+		// The old JWT runs out while the new socket is still handshaking.
+		first.drop(1008);
+		expect(t.live.current).toBe("reconnecting");
+		second.connected();
+		expect(t.live.current).toBe("live");
+		// Events may have gone missing in between, so the page fetches again.
+		expect(t.connects).toEqual([false, true]);
+		// No retry opens a third socket, and the new JWT is still the one in use.
+		await vi.advanceTimersByTimeAsync(
+			BACKOFF_MS[BACKOFF_MS.length - 1] + TICK_MS,
+		);
+		expect(t.sockets).toHaveLength(2);
+		expect(second.closedWith).toBeNull();
+		t.live.check();
+		await flush();
+		expect(t.sockets).toHaveLength(2);
+		expect(t.fetchToken).toHaveBeenCalledTimes(2);
+		t.live.stop();
+	});
+
+	it("retries when the taken-over socket never finishes its handshake", async () => {
+		const t = setup();
+		t.live.start();
+		await flush();
+		const first = t.last();
+		first.connected();
+		await vi.advanceTimersByTimeAsync(900_000 - ROTATE_BEFORE_MS);
+		const second = t.last();
+		first.drop(1006);
+		await vi.advanceTimersByTimeAsync(CONNECT_TIMEOUT_MS + TICK_MS);
+		expect(second.closedWith).toBe(1000);
+		await vi.advanceTimersByTimeAsync(BACKOFF_MS[1] * 2);
+		expect(t.sockets.length).toBeGreaterThanOrEqual(3);
+		t.last().connected();
+		expect(t.live.current).toBe("live");
+		t.live.stop();
+	});
+
 	it("keeps the old socket when a rotation fails, and tries again", async () => {
 		const t = setup();
 		t.live.start();
