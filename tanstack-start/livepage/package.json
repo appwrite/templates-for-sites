@@ -1,0 +1,65 @@
+{
+  "name": "livepage",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "scripts": {
+    "dev": "vite dev --port 3000",
+    "generate-routes": "vite build",
+    "build": "vite build",
+    "preview": "vite preview",
+    "format": "biome format",
+    "lint": "biome lint",
+    "check": "biome check",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.18",
+    "@tanstack/react-router": "1.170.46",
+    "@tanstack/react-start": "1.169.4",
+    "@tiptap/core": "3.33.0",
+    "@tiptap/extension-bubble-menu": "3.33.0",
+    "@tiptap/extension-code-block-lowlight": "3.33.0",
+    "@tiptap/extension-collaboration": "3.33.0",
+    "@tiptap/extension-document": "3.33.0",
+    "@tiptap/extension-highlight": "3.33.0",
+    "@tiptap/extension-list": "3.33.0",
+    "@tiptap/extension-paragraph": "3.33.0",
+    "@tiptap/extension-table": "3.33.0",
+    "@tiptap/extension-text": "3.33.0",
+    "@tiptap/extensions": "3.33.0",
+    "@tiptap/pm": "3.33.0",
+    "@tiptap/react": "3.33.0",
+    "@tiptap/starter-kit": "3.33.0",
+    "@tiptap/suggestion": "3.33.0",
+    "@tiptap/y-tiptap": "3.2.0",
+    "appwrite": "29.2.0",
+    "fflate": "^0.8.3",
+    "lowlight": "3.3.0",
+    "node-appwrite": "^31.1.0",
+    "qrcode-generator": "^2.0.4",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tailwindcss": "^4.1.18",
+    "y-protocols": "1.0.7",
+    "yjs": "13.6.33"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.5",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.0",
+    "vitest": "^5.1.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "lightningcss"
+    ]
+  }
+}
