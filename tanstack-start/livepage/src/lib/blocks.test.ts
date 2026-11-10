@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
 import { BODY_FIELD } from "#/features/editor/codec";
-import { appendBlocks, type Block, snapshotFromBlocks } from "./blocks";
+import {
+	appendBlocks,
+	type Block,
+	docFileIds,
+	docToMarkdown,
+	snapshotFromBlocks,
+} from "./blocks";
 
 const EMPTY: Block[] = [
 	{ type: "paragraph", content: [] },
@@ -45,5 +51,30 @@ describe("blocks into Yjs", () => {
 		const doc = new Y.Doc();
 		Y.applyUpdate(doc, Uint8Array.from(Buffer.from(snapshot, "base64")));
 		expect(inlineBlocksWithoutText(doc.getXmlFragment(BODY_FIELD))).toEqual([]);
+	});
+});
+
+describe("Markdown export", () => {
+	const doc = () => {
+		const d = new Y.Doc();
+		appendBlocks(d, [
+			{ type: "image", fileId: "f1", alt: "Route map" },
+			{ type: "blockquote", content: [] },
+			{ type: "image", src: "https://example.com/a.png", alt: "" },
+		]);
+		return d;
+	};
+
+	it("links uploaded images to the site by default", () => {
+		expect(docToMarkdown(doc())).toContain("![Route map](/api/files/f1)");
+	});
+
+	it("links uploaded images where the export puts them, and leaves outside images alone", () => {
+		const markdown = docToMarkdown(doc(), "Plan", {
+			imageSrc: (fileId) => `images/${fileId}.png`,
+		});
+		expect(markdown).toContain("![Route map](images/f1.png)");
+		expect(markdown).toContain("![](https://example.com/a.png)");
+		expect(docFileIds(doc())).toEqual(["f1"]);
 	});
 });

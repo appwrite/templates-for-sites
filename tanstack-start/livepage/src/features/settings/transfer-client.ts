@@ -10,7 +10,7 @@ import {
 	fetchExportDatabase,
 	submitImport,
 } from "#/functions/settings";
-import { docToMarkdown } from "#/lib/blocks";
+import { docFileIds, docToMarkdown, type MarkdownOptions } from "#/lib/blocks";
 import { randomId } from "#/lib/browser";
 import type { ImportItem, ImportTooLong } from "./server/transfer";
 
@@ -237,13 +237,113 @@ const safeName = (title: string) => {
 
 type Exported = Awaited<ReturnType<typeof fetchExportBatch>>["pages"][number];
 
-function markdownOf(page: Exported) {
+function docOf(page: Exported) {
 	const doc = new Y.Doc();
 	if (page.snapshot) Y.applyUpdate(doc, fromBase64(page.snapshot));
 	for (const update of page.updates) Y.applyUpdate(doc, fromBase64(update));
-	const markdown = docToMarkdown(doc, page.title);
-	doc.destroy();
-	return markdown;
+	return doc;
+}
+
+const IMAGE_EXTENSIONS: Record<string, string> = {
+	"image/png": "png",
+	"image/jpeg": "jpg",
+	"image/gif": "gif",
+	"image/webp": "webp",
+	"image/avif": "avif",
+	"image/svg+xml": "svg",
+	"image/bmp": "bmp",
+};
+
+type ExportImage = { path: string; data: Uint8Array };
+
+// Downloads the images an export uses into `folder`, each once, with the signed-in person's own
+// access. One that can't be read is left out and keeps its link to this site.
+async function fetchImages(
+	fileIds: string[],
+	folder: string,
+	into: Map<string, ExportImage | null>,
+) {
+	for (const fileId of fileIds) {
+		if (into.has(fileId)) continue;
+		into.set(fileId, null);
+		try {
+			const res = await fetch(`/api/files/${encodeURIComponent(fileId)}`, {
+				credentials: "same-origin",
+			});
+			if (!res.ok) continue;
+			const type = (res.headers.get("content-type") ?? "")
+				.split(";")[0]
+				.trim()
+				.toLowerCase();
+			const extension = IMAGE_EXTENSIONS[type] ?? "bin";
+			const number = [...into.values()].filter(Boolean).length + 1;
+			into.set(fileId, {
+				path: `${folder}/image-${number}.${extension}`,
+				data: new Uint8Array(await res.arrayBuffer()),
+			});
+		} catch {
+			// Offline or gone: the Markdown links to the site instead.
+		}
+	}
+}
+
+// Links each image to its file in the zip, relative to a Markdown file `depth` folders down.
+function zipLinks(
+	images: Map<string, ExportImage | null>,
+	depth: number,
+): MarkdownOptions {
+	return {
+		imageSrc: (fileId) => {
+			const image = images.get(fileId);
+			return image
+				? `${"../".repeat(depth)}${image.path}`
+				: `${location.origin}/api/files/${fileId}`;
+		},
+	};
+}
+
+export function saveFile(
+	data: Uint8Array | string,
+	name: string,
+	type: string,
+) {
+	const blob = new Blob(
+		[typeof data === "string" ? data : (data.slice().buffer as ArrayBuffer)],
+		{ type },
+	);
+	const url = URL.createObjectURL(blob);
+	const link = document.createElement("a");
+	link.href = url;
+	link.download = name;
+	link.click();
+	setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+// One page as Markdown. As a .zip, its images come along in `images/` and the Markdown links to
+// them; as a lone .md, images link to this site.
+export async function exportPage(
+	doc: Y.Doc,
+	title: string,
+	format: "md" | "zip",
+) {
+	const name = safeName(title);
+	if (format === "md") {
+		const markdown = docToMarkdown(doc, title || "Untitled", {
+			imageSrc: (fileId) => `${location.origin}/api/files/${fileId}`,
+		});
+		saveFile(markdown, `${name}.md`, "text/markdown");
+		return;
+	}
+	const images = new Map<string, ExportImage | null>();
+	await fetchImages(docFileIds(doc), "images", images);
+	const files: Record<string, Uint8Array> = {
+		[`${name}.md`]: encode(
+			docToMarkdown(doc, title || "Untitled", zipLinks(images, 0)),
+		),
+	};
+	for (const image of images.values())
+		if (image) files[image.path] = image.data;
+	saveFile(zipSync(files, { level: 6 }), `${name}.zip`, "application/zip");
 }
 
 export async function runExport(
@@ -262,7 +362,8 @@ export async function runExport(
 		cursor = batch.cursor;
 	}
 	const byId = new Map(pages.map((p) => [p.id, p]));
-	const used = new Set<string>();
+	// The images folder is taken, so a page called "images" gets another name.
+	const used = new Set<string>(["images"]);
 	const paths = new Map<string, string>();
 	const unique = (path: string) => {
 		let candidate = path;
@@ -280,6 +381,7 @@ export async function runExport(
 		return path;
 	};
 	const files: Record<string, Uint8Array> = {};
+	const images = new Map<string, ExportImage | null>();
 	for (const page of pages) {
 		if (cancelled()) return null;
 		const path = pathOf(page);
@@ -296,7 +398,17 @@ export async function runExport(
 				cursor = slice.cursor ?? undefined;
 			} while (cursor);
 			files[`${path}.csv`] = encode(toCsv(headers, rows));
-		} else files[`${path}.md`] = encode(markdownOf(page));
+		} else {
+			const doc = docOf(page);
+			await fetchImages(docFileIds(doc), "images", images);
+			const depth = path.split("/").length - 1;
+			files[`${path}.md`] = encode(
+				docToMarkdown(doc, page.title, zipLinks(images, depth)),
+			);
+			doc.destroy();
+		}
 	}
+	for (const image of images.values())
+		if (image) files[image.path] = image.data;
 	return { zip: zipSync(files, { level: 6 }), count: pages.length };
 }

@@ -249,11 +249,15 @@ function inlineElementText(el: Y.XmlElement) {
 	return nodeText(el);
 }
 
+// How an exported document links its images. Without it, an image points at this site's file route.
+export type MarkdownOptions = { imageSrc?: (fileId: string) => string };
+
 function listToMarkdown(
 	el: Y.XmlElement,
 	indent: string,
 	ordered: boolean,
 	task: boolean,
+	options: MarkdownOptions,
 ): string {
 	const lines: string[] = [];
 	childrenOf(el).forEach((item, i) => {
@@ -266,7 +270,7 @@ function listToMarkdown(
 		const head = parts[0] ? inlineMarkdown(parts[0]) : "";
 		lines.push(`${indent}${marker} ${check}${head}`);
 		for (const rest of parts.slice(1))
-			lines.push(blockToMarkdown(rest, `${indent}  `));
+			lines.push(blockToMarkdown(rest, `${indent}  `, options));
 	});
 	return lines.join("\n");
 }
@@ -293,22 +297,26 @@ function tableToMarkdown(el: Y.XmlElement) {
 	].join("\n");
 }
 
-function blockToMarkdown(el: Y.XmlElement, indent = ""): string {
+function blockToMarkdown(
+	el: Y.XmlElement,
+	indent = "",
+	options: MarkdownOptions = {},
+): string {
 	switch (el.nodeName) {
 		case "heading": {
 			const level = Number(el.getAttribute("level") ?? 1);
 			return `${indent}${"#".repeat(level)} ${inlineMarkdown(el)}`;
 		}
 		case "bulletList":
-			return listToMarkdown(el, indent, false, false);
+			return listToMarkdown(el, indent, false, false, options);
 		case "orderedList":
-			return listToMarkdown(el, indent, true, false);
+			return listToMarkdown(el, indent, true, false, options);
 		case "taskList":
-			return listToMarkdown(el, indent, false, true);
+			return listToMarkdown(el, indent, false, true, options);
 		case "blockquote":
 			return childrenOf(el)
 				.filter((c): c is Y.XmlElement => c instanceof Y.XmlElement)
-				.map((c) => blockToMarkdown(c, ""))
+				.map((c) => blockToMarkdown(c, "", options))
 				.join("\n\n")
 				.split("\n")
 				.map((line) => `${indent}> ${line}`)
@@ -323,7 +331,7 @@ function blockToMarkdown(el: Y.XmlElement, indent = ""): string {
 			const alt = el.getAttribute("alt") ?? "";
 			const fileId = el.getAttribute("fileId");
 			const src = fileId
-				? `/api/files/${fileId}`
+				? (options.imageSrc?.(fileId) ?? `/api/files/${fileId}`)
 				: (el.getAttribute("src") ?? "");
 			return `${indent}![${alt}](${src})`;
 		}
@@ -334,10 +342,14 @@ function blockToMarkdown(el: Y.XmlElement, indent = ""): string {
 	}
 }
 
-export function docToMarkdown(doc: Y.Doc, title?: string) {
+export function docToMarkdown(
+	doc: Y.Doc,
+	title?: string,
+	options: MarkdownOptions = {},
+) {
 	const blocks = childrenOf(doc.getXmlFragment(BODY_FIELD))
 		.filter((c): c is Y.XmlElement => c instanceof Y.XmlElement)
-		.map((c) => blockToMarkdown(c));
+		.map((c) => blockToMarkdown(c, "", options));
 	const head = title ? [`# ${title}`] : [];
 	return `${[...head, ...blocks].join("\n\n").trim()}\n`;
 }

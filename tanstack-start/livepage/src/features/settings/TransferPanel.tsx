@@ -10,6 +10,7 @@ import {
 	runExport,
 	runImport,
 	type SourceFile,
+	saveFile,
 } from "./transfer-client";
 import { Group, PanelTitle, Row, TextLink } from "./ui";
 
@@ -117,18 +118,8 @@ export function TransferPanel() {
 				(done) => setJob({ kind: "export", done }),
 				() => cancel.current,
 			);
-			if (result) {
-				const url = URL.createObjectURL(
-					new Blob([result.zip.slice().buffer as ArrayBuffer], {
-						type: "application/zip",
-					}),
-				);
-				const link = document.createElement("a");
-				link.href = url;
-				link.download = `${workspace.name}.zip`;
-				link.click();
-				setTimeout(() => URL.revokeObjectURL(url), 60_000);
-			}
+			if (result)
+				saveFile(result.zip, `${workspace.name}.zip`, "application/zip");
 		} catch (err) {
 			toast.show(errorText(err), { tone: "error" });
 		} finally {
@@ -262,7 +253,7 @@ export function TransferPanel() {
 			<Group title="Export">
 				<Row
 					title="Export the workspace"
-					detail="Every page as Markdown and every database as a spreadsheet, in one .zip."
+					detail="Every page as Markdown with its images, and every database as a spreadsheet, in one .zip."
 				>
 					{job?.kind === "export" ? (
 						<div className="flex items-center gap-3">

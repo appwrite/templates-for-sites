@@ -1000,6 +1000,14 @@ function LiveEditors({
 					</span>
 				)}
 				<PageMenu
+					onExport={(format) =>
+						// Loaded on first use, so the zip code stays out of the editor's bundle.
+						import("#/features/settings/transfer-client")
+							.then(({ exportPage }) =>
+								exportPage(sync.doc, page.title, format),
+							)
+							.catch((err) => toast.show(errorText(err), { tone: "error" }))
+					}
 					onHistory={() => setShowHistory(true)}
 					commentCount={threads.length}
 					onComments={() => setSheetOpen(true)}
@@ -1419,10 +1427,12 @@ function SaveIndicator({ state }: { state: SaveState }) {
 }
 
 function PageMenu({
+	onExport,
 	onHistory,
 	onComments,
 	commentCount,
 }: {
+	onExport: (format: "md" | "zip") => void;
 	onHistory: () => void;
 	onComments: () => void;
 	commentCount: number;
@@ -1452,6 +1462,17 @@ function PageMenu({
 			label: commentCount ? `Comments (${commentCount})` : "Comments",
 			onSelect: onComments,
 		},
+		{ type: "separator", id: "export-separator" },
+		{
+			id: "export-md",
+			label: "Export as Markdown",
+			onSelect: () => onExport("md"),
+		},
+		{
+			id: "export-zip",
+			label: "Export as .zip with images",
+			onSelect: () => onExport("zip"),
+		},
 	];
 	return (
 		<>
@@ -1471,7 +1492,7 @@ function PageMenu({
 				onClose={menu.close}
 				items={items}
 				align="end"
-				width={180}
+				width={220}
 			/>
 		</>
 	);
