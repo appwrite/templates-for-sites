@@ -143,10 +143,13 @@ export async function searchByMeaning(
 		>({
 			databaseId,
 			collectionId: COLLECTION,
-			queries: [Query.vectorCosine("embeddings", vector), Query.limit(8)],
+			// Someone in several workspaces reads vectors from all of them, so look further than 8
+			// and keep this workspace's nearest.
+			queries: [Query.vectorCosine("embeddings", vector), Query.limit(100)],
 		});
 		return documents
 			.filter((doc) => doc.metadata?.workspaceId === workspaceId)
+			.slice(0, 8)
 			.map((doc) => doc.$id);
 	} catch (err) {
 		console.warn(

@@ -387,7 +387,13 @@ export class PageSync {
 		this.inFlight = batch;
 		this.setState(this.localState());
 		try {
-			await this.send(ID.unique(), toBase64(batch), this.caretValue());
+			await this.send(ID.unique(), toBase64(batch), this.caretValue()).catch(
+				(err) => {
+					// Every batch gets a new row ID, so a 409 means an earlier try of this same write
+					// was saved and only its response was lost.
+					if (!(err instanceof WriteError && err.code === 409)) throw err;
+				},
+			);
 			this.inFlight = null;
 			this.lastWriteAt = Date.now();
 			this.failures = 0;
