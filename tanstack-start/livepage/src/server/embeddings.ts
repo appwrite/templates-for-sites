@@ -11,7 +11,11 @@ import { adminClient, appwriteEnv, errorCode, siteKey } from "./appwrite";
 import { BODIES, DATABASE_ID, PAGES } from "./schema";
 import { readSettings, vectorsDatabaseName } from "./settings";
 
-const COLLECTION = "pages";
+// One collection per vector size: workspaces can use different embedding models, and a
+// collection only holds vectors of the size it was made with.
+const COLLECTION_PREFIX = "pages";
+const collectionFor = (dimension: number) =>
+	`${COLLECTION_PREFIX}-${dimension}`;
 const EMBED_TIMEOUT_MS = 8_000;
 const MAX_EMBED_CHARS = 8_000;
 // Pages per provider call when catching up.
@@ -50,6 +54,14 @@ function vectorText(title: string, body: string | null) {
 	return `${title}\n\n${body ?? ""}`.trim().slice(0, MAX_EMBED_CHARS);
 }
 
+// Which model made a vector. Part of its hash, so changing the model or provider makes every page
+// stale and the catch-up redoes them.
+function modelKey(config: AiConfig) {
+	return config.embeddingModel
+		? `${config.endpoint}|${config.embeddingModel}`
+		: "appwrite";
+}
+
 async function hashOf(text: string) {
 	const digest = await crypto.subtle.digest(
 		"SHA-256",
@@ -85,26 +97,24 @@ export async function embedPage(
 	if (!text) return { skipped: true, reason: "empty" };
 
 	const vectors = new VectorsDB(adminClient());
-	const hash = await hashOf(text);
-	try {
-		const existing = await vectors.getDocument<
-			Models.Document & { metadata?: VectorMeta }
-		>({
-			databaseId,
-			collectionId: COLLECTION,
-			documentId: pageId,
-		});
-		if (existing.metadata?.hash === hash)
-			return { skipped: true, reason: "unchanged" };
-	} catch (err) {
-		if (errorCode(err) !== 404) throw err;
+	const hash = await hashOf(`${modelKey(config)}\n${text}`);
+	for (const collectionId of await pageCollections(databaseId)) {
+		try {
+			const existing = await vectors.getDocument<
+				Models.Document & { metadata?: VectorMeta }
+			>({ databaseId, collectionId, documentId: pageId });
+			if (existing.metadata?.hash === hash)
+				return { skipped: true, reason: "unchanged" };
+		} catch (err) {
+			if (errorCode(err) !== 404) throw err;
+		}
 	}
 
 	const [vector] = await embed(config, [text]);
 	await ensureCollection(databaseId, vector.length);
 	await vectors.upsertDocument({
 		databaseId,
-		collectionId: COLLECTION,
+		collectionId: collectionFor(vector.length),
 		documentId: pageId,
 		data: {
 			embeddings: vector,
@@ -115,13 +125,25 @@ export async function embedPage(
 	return { skipped: false };
 }
 
+async function pageCollections(databaseId: string): Promise<string[]> {
+	const { collections } = await new VectorsDB(adminClient())
+		.listCollections({ databaseId, queries: [Query.limit(100)] })
+		.catch((err) => {
+			if (errorCode(err) === 404) return { collections: [] };
+			throw err;
+		});
+	return collections
+		.map((c) => c.$id)
+		.filter((id) => id.startsWith(COLLECTION_PREFIX));
+}
+
 async function ensureCollection(databaseId: string, dimension: number) {
 	const vectors = new VectorsDB(adminClient());
 	await vectors
 		.createCollection({
 			databaseId,
-			collectionId: COLLECTION,
-			name: "Pages",
+			collectionId: collectionFor(dimension),
+			name: `Pages (${dimension})`,
 			dimension,
 			permissions: [],
 			documentSecurity: true,
@@ -172,7 +194,8 @@ export async function searchByMeaning(
 			Models.Document & { metadata?: VectorMeta; $distance?: number }
 		>({
 			databaseId,
-			collectionId: COLLECTION,
+			// Vectors of the size this query's model makes. Ones from another model can't be compared.
+			collectionId: collectionFor(vector.length),
 			// Someone in several workspaces can read vectors from all of them, so filter before the limit.
 			queries: [
 				Query.vectorCosine("embeddings", vector),
@@ -218,14 +241,26 @@ async function listAll<T extends Models.Row>(
 }
 
 async function storedHashes(databaseId: string, workspaceId: string) {
-	const hashes = new Map<string, string | undefined>();
+	const hashes = new Set<string>();
+	for (const collectionId of await pageCollections(databaseId))
+		await collectHashes(databaseId, collectionId, workspaceId, hashes);
+	return hashes;
+}
+
+// Adds `pageId:hash` for every vector of the workspace in one collection.
+async function collectHashes(
+	databaseId: string,
+	collectionId: string,
+	workspaceId: string,
+	into: Set<string>,
+) {
 	const vectors = new VectorsDB(adminClient());
 	let cursor: string | undefined;
 	for (;;) {
 		const { documents } = await vectors
 			.listDocuments<Models.Document & { metadata?: VectorMeta }>({
 				databaseId,
-				collectionId: COLLECTION,
+				collectionId,
 				queries: [
 					Query.equal("metadata.workspaceId", [workspaceId]),
 					Query.select(["$id", "metadata"]),
@@ -238,8 +273,8 @@ async function storedHashes(databaseId: string, workspaceId: string) {
 				if (errorCode(err) === 404) return { documents: [] };
 				throw err;
 			});
-		for (const doc of documents) hashes.set(doc.$id, doc.metadata?.hash);
-		if (documents.length < 500) return hashes;
+		for (const doc of documents) into.add(`${doc.$id}:${doc.metadata?.hash}`);
+		if (documents.length < 500) return;
 		cursor = documents[documents.length - 1].$id;
 	}
 }
@@ -278,8 +313,8 @@ export async function embedStale(
 		const page = toPage(row);
 		const text = vectorText(page.title, bodyOf.get(page.id) ?? null);
 		if (!text) continue;
-		const hash = await hashOf(text);
-		if (hashes.get(page.id) !== hash) stale.push({ page, text, hash });
+		const hash = await hashOf(`${modelKey(config)}\n${text}`);
+		if (!hashes.has(`${page.id}:${hash}`)) stale.push({ page, text, hash });
 	}
 	const batch = stale.slice(0, STALE_BATCH);
 	if (!batch.length) return { embedded: 0, remaining: 0 };
@@ -293,7 +328,7 @@ export async function embedStale(
 		batch.map((item, i) =>
 			store.upsertDocument({
 				databaseId,
-				collectionId: COLLECTION,
+				collectionId: collectionFor(vectors[0].length),
 				documentId: item.page.id,
 				data: {
 					embeddings: vectors[i],
