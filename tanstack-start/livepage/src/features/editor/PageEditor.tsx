@@ -798,6 +798,9 @@ function LiveEditors({
 				handleKeyDown: (_view, event) => {
 					if (event.key === "Enter") {
 						event.preventDefault();
+						// Tiptap's focus command waits a frame, so keys typed right after Enter would still
+						// land in the title. Move DOM focus now, then place the caret.
+						bodyRef.current?.view.focus();
 						bodyRef.current?.commands.focus("start");
 						return true;
 					}
@@ -1552,46 +1555,51 @@ function PageHead({
 
 	return (
 		<div>
-			{page.icon && (
-				<button
-					ref={icon.anchor}
-					type="button"
-					onClick={() => canEdit && setOpen(true)}
-					aria-label={canEdit ? "Change icon" : undefined}
-					className={`mb-2 text-[44px] leading-none ${canEdit ? "" : "cursor-default"}`}
-				>
-					{page.icon}
-				</button>
-			)}
-			{canEdit && (
-				<div className="lp-head-actions flex items-center gap-3 pb-2 text-[13px] text-pencil">
-					{!page.icon && (
-						<button
-							ref={icon.anchor}
-							type="button"
-							onClick={() => setOpen(true)}
-							className="hover:text-ink coarse:h-10"
-						>
-							<PlusIcon size={12} className="mr-1 inline" />
-							Add icon
-						</button>
-					)}
-					{!page.coverFileId && (
-						<>
+			{/* With an icon, the actions sit beside it instead of overlapping it. */}
+			<div className={page.icon ? "mb-2 flex items-end gap-4" : undefined}>
+				{page.icon && (
+					<button
+						ref={icon.anchor}
+						type="button"
+						onClick={() => canEdit && setOpen(true)}
+						aria-label={canEdit ? "Change icon" : undefined}
+						className={`text-[44px] leading-none ${canEdit ? "" : "cursor-default"}`}
+					>
+						{page.icon}
+					</button>
+				)}
+				{canEdit && (
+					<div
+						className={`lp-head-actions flex items-center gap-3 text-[13px] text-pencil ${page.icon ? "lp-head-actions-beside" : "pb-2"}`}
+					>
+						{!page.icon && (
 							<button
+								ref={icon.anchor}
 								type="button"
-								onClick={cover.choose}
-								disabled={cover.busy}
-								className="hover:text-ink disabled:opacity-60 coarse:h-10"
+								onClick={() => setOpen(true)}
+								className="hover:text-ink coarse:h-10"
 							>
 								<PlusIcon size={12} className="mr-1 inline" />
-								{cover.busy ? "Uploading cover" : "Add cover"}
+								Add icon
 							</button>
-							{cover.inputEl}
-						</>
-					)}
-				</div>
-			)}
+						)}
+						{!page.coverFileId && (
+							<>
+								<button
+									type="button"
+									onClick={cover.choose}
+									disabled={cover.busy}
+									className="hover:text-ink disabled:opacity-60 coarse:h-10"
+								>
+									<PlusIcon size={12} className="mr-1 inline" />
+									{cover.busy ? "Uploading cover" : "Add cover"}
+								</button>
+								{cover.inputEl}
+							</>
+						)}
+					</div>
+				)}
+			</div>
 			<Popover
 				anchor={icon.anchor}
 				open={open}

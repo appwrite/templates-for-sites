@@ -57,6 +57,12 @@ function childrenOf(
 	);
 }
 
+// The section a top-level page shows under: a missing or deleted section means the first one.
+function inSection(page: Page, sectionId: string, sections: Section[]) {
+	const known = sections.some((s) => s.id === page.sectionId);
+	return (known ? page.sectionId : sections[0]?.id) === sectionId;
+}
+
 function isDescendant(pages: Page[], ancestorId: string, id: string): boolean {
 	let current = pages.find((p) => p.id === id);
 	while (current?.parentId) {
@@ -159,8 +165,14 @@ function Node({
 	setDrop: (d: Drop) => void;
 	section: Section | null;
 }) {
-	const { activePageId, createPage, updatePage, trashPage, workspace } =
-		useWorkspace();
+	const {
+		activePageId,
+		createPage,
+		updatePage,
+		trashPage,
+		workspace,
+		pages: allPages,
+	} = useWorkspace();
 	const children = useMemo(() => childrenOf(pages, page.id), [pages, page.id]);
 	const isOpen = expanded.has(page.id);
 	const menu = useMenu();
@@ -320,10 +332,18 @@ function Node({
 								updatePage(page.id, {
 									parentId: null,
 									sectionId: s.id,
+									// `pages` only holds this section, so look at the whole workspace to find the end.
 									position:
 										Math.max(
 											0,
-											...childrenOf(pages, null, s.id).map((p) => p.position),
+											...allPages
+												.filter(
+													(p) =>
+														!p.parentId &&
+														p.visibility === "workspace" &&
+														inSection(p, s.id, workspace.sections),
+												)
+												.map((p) => p.position),
 										) + 1,
 								}),
 						}),

@@ -577,10 +577,15 @@
 		margin-top: -22px;
 		height: 22px;
 	}
+	.lp-head-actions.lp-head-actions-beside {
+		margin-top: 0;
+	}
 	.lp-editor-surface:hover ~ .lp-head-actions,
 	div:hover > .lp-head-actions,
+	div:hover > div > .lp-head-actions,
 	.lp-head-actions:focus-within,
-	div:focus-within > .lp-head-actions {
+	div:focus-within > .lp-head-actions,
+	div:focus-within > div > .lp-head-actions {
 		opacity: 1;
 	}
 	/* Touch has no hover: these appear while the title is being edited. */
@@ -590,8 +595,12 @@
 			height: 32px;
 			pointer-events: none;
 		}
-		div:focus-within > .lp-head-actions {
+		div:focus-within > .lp-head-actions,
+		div:focus-within > div > .lp-head-actions {
 			pointer-events: auto;
+		}
+		.lp-head-actions.lp-head-actions-beside {
+			margin-top: 0;
 		}
 	}
 	.lp-editor {
