@@ -1,6 +1,6 @@
 // Browser side of the AI routes: reads the newline-delimited JSON stream and tracks AI status.
 import { useEffect, useState } from "react";
-import { fetchAiStatus } from "#/functions/ai";
+import { fetchAiStatus, submitVectorRefresh } from "#/functions/ai";
 import type { AiStatus } from "#/server/ai";
 
 export type { AiStatus };
@@ -114,4 +114,26 @@ export function useAiStatus(workspaceId: string): AiStatus | null {
 		};
 	}, [workspaceId]);
 	return status;
+}
+
+const refreshed = new Set<string>();
+
+// Once per tab and workspace, gives pages that have no vector yet (or an old one) a new one, a
+// batch at a time. Edits keep vectors fresh after that.
+export function useVectorRefresh(workspaceId: string, status: AiStatus | null) {
+	const on = Boolean(status?.vectors && status.state === "ready");
+	useEffect(() => {
+		if (!on || refreshed.has(workspaceId)) return;
+		refreshed.add(workspaceId);
+		// Runs to the end even if the screen changes: it's catch-up work, not tied to a view.
+		const run = async () => {
+			for (let round = 0; round < 50; round++) {
+				const { embedded, remaining } = await submitVectorRefresh({
+					data: { workspaceId },
+				});
+				if (!embedded || !remaining) return;
+			}
+		};
+		run().catch(() => refreshed.delete(workspaceId));
+	}, [on, workspaceId]);
 }

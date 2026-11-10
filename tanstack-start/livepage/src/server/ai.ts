@@ -34,7 +34,7 @@ import { type PageRow, toPage } from "#/lib/rows";
 import type { Page, Role } from "#/lib/types";
 import { adminClient, errorCode, type sessionClient } from "./appwrite";
 import { AuthError, requireViewer, requireWorkspace } from "./auth";
-import { embedPage, searchByMeaning } from "./embeddings";
+import { embedPage, embedStale, searchByMeaning } from "./embeddings";
 import { saveImageFile } from "./files";
 import { assertPublicUrl } from "./net-guard";
 import {
@@ -1918,6 +1918,25 @@ export async function readCapabilities(
 	if (!config) return null;
 	const { capabilities } = await probeProvider(config, false);
 	return capabilities;
+}
+
+// ---------- catching vectors up ----------
+
+// Called by a member's browser when a workspace opens, in batches, while pages are missing vectors.
+export async function refreshVectors(
+	workspaceId: string,
+): Promise<{ embedded: number; remaining: number }> {
+	const { client, viewer } = await requireWorkspace(workspaceId);
+	const { config } = await loadConfig(workspaceId);
+	if (!config) return { embedded: 0, remaining: 0 };
+	try {
+		await chargeAi(config, viewer.userId, workspaceId, "text");
+	} catch (err) {
+		if (err instanceof AiError && err.code === "quota")
+			return { embedded: 0, remaining: 0 };
+		throw err;
+	}
+	return embedStale(config, client, workspaceId);
 }
 
 // ---------- POST /api/ai/embed ----------

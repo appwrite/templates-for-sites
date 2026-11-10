@@ -303,7 +303,11 @@ export function MapPage() {
 			const page = graph.pages[i];
 			const x = sim.x[i];
 			const y = sim.y[i];
-			const inFocus = focusSet ? focusSet.has(i) : true;
+			// Pages related by meaning to the selected one are part of what it's showing.
+			const inFocus = focusSet
+				? focusSet.has(i) ||
+					(selectedI !== null && relatedRef.current.includes(i))
+				: true;
 			const isCore = i === selectedI || i === hoverIndex;
 			const important = graph.adjacency[i].length >= 3 || isCore;
 			// Zoomed out to fit a phone, nodes and labels keep their on-screen size.
@@ -339,7 +343,7 @@ export function MapPage() {
 				important ||
 				scale > 0.9 ||
 				sim.count <= 60 ||
-				focusSet?.has(i);
+				(focusSet !== null && inFocus);
 			if (showLabel) {
 				const fontSize = (isCore ? 13 : 12) * Math.min(keep, 2.1);
 				ctx.font = `${isCore || important ? 500 : 400} ${fontSize}px Geist, sans-serif`;
@@ -395,6 +399,17 @@ export function MapPage() {
 	}, []);
 
 	useEffect(invalidate, [invalidate]);
+
+	// What's drawn depends on these too. A settled layout doesn't redraw on its own, so a click or
+	// related pages arriving later would otherwise not show until something moved.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: each one changes the drawing
+	useEffect(invalidate, [
+		invalidate,
+		selectedIndex,
+		hover,
+		visible,
+		relatedHits,
+	]);
 
 	// Colors come from the theme, so a switch needs a redraw.
 	useEffect(() => {

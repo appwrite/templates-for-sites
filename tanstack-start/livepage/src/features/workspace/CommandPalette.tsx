@@ -17,7 +17,7 @@ import {
 	TableIcon,
 } from "#/components/icons";
 import { useWorkspace } from "#/components/shell/workspace-context";
-import { useAiStatus } from "#/features/ai/client";
+import { useAiStatus, useVectorRefresh } from "#/features/ai/client";
 import { type SearchHit, searchMeaning, searchPages } from "#/functions/search";
 import { errorText } from "#/lib/errors";
 import { displayName } from "#/lib/permissions";
@@ -50,6 +50,8 @@ export function CommandPalette() {
 	const { workspace, pages, peers, viewer } = useWorkspace();
 	const { recents, favorites } = useExtras();
 	const ai = useAiStatus(workspace.id);
+	// The palette is mounted on every workspace screen, so meaning search gets its catch-up here.
+	useVectorRefresh(workspace.id, ai);
 	const router = useRouter();
 	const [open, setOpen] = useState(false);
 	const [query, setQuery] = useState("");
@@ -422,11 +424,15 @@ export function CommandPalette() {
 					{error && (
 						<p className="px-[10px] py-2 text-sm text-coral">{error}</p>
 					)}
-					{term.length >= 2 && !loading && !hits.length && !error && (
-						<p className="px-[10px] py-2 text-sm text-pencil">
-							No pages match "{term}".
-						</p>
-					)}
+					{term.length >= 2 &&
+						!loading &&
+						!hits.length &&
+						!meaning.length &&
+						!error && (
+							<p className="px-[10px] py-2 text-sm text-pencil">
+								No pages match "{term}".
+							</p>
+						)}
 					{rows.map((row, index) => {
 						const heading =
 							row.section && row.section !== lastSection ? row.section : null;

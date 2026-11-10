@@ -5,6 +5,7 @@ import {
 	aiStatus,
 	readAiSettings,
 	readCapabilities,
+	refreshVectors,
 	saveAiSettings,
 	testAiSettings,
 } from "#/server/ai";
@@ -28,3 +29,7 @@ export const submitAiSettings = createServerFn({ method: "POST" })
 export const submitAiTest = createServerFn({ method: "POST" })
 	.validator((d: { workspaceId: string; patch: AiSettingsPatch }) => d)
 	.handler(({ data }) => testAiSettings(data.workspaceId, data.patch));
+
+export const submitVectorRefresh = createServerFn({ method: "POST" })
+	.validator((d: { workspaceId: string }) => d)
+	.handler(({ data }) => refreshVectors(data.workspaceId));
