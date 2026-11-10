@@ -146,7 +146,7 @@ export async function searchByMeaning(
 			// Someone in several workspaces can read vectors from all of them, so filter before the limit.
 			queries: [
 				Query.vectorCosine("embeddings", vector),
-				Query.equal("metadata", [{ workspaceId }]),
+				Query.equal("metadata.workspaceId", [workspaceId]),
 				Query.limit(8),
 			],
 		});
