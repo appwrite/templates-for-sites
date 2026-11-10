@@ -1,0 +1,676 @@
+/* Editor type follows board 10. Tokens come from the theme in styles.css. */
+/* biome-ignore-all lint/style/noDescendingSpecificity: selectors are grouped by block, not by specificity */
+@layer components {
+	.lp-prose {
+		color: var(--color-ink);
+		font-size: 16px;
+		line-height: 26px;
+	}
+	.lp-prose:focus {
+		outline: none;
+	}
+	.lp-prose > * + * {
+		margin-top: 6px;
+	}
+	.lp-prose h1,
+	.lp-prose h2,
+	.lp-prose h3,
+	.lp-prose h4 {
+		font-family: var(--font-sans);
+		font-weight: 600;
+		letter-spacing: -0.01em;
+		color: var(--color-ink);
+	}
+	.lp-prose h1 {
+		font-size: 28px;
+		line-height: 36px;
+		margin-top: 32px;
+		margin-bottom: 8px;
+	}
+	.lp-prose h2 {
+		font-size: 20px;
+		line-height: 28px;
+		margin-top: 28px;
+		margin-bottom: 8px;
+	}
+	.lp-prose h3,
+	.lp-prose h4 {
+		font-size: 17px;
+		line-height: 24px;
+		margin-top: 20px;
+		margin-bottom: 6px;
+	}
+	.lp-prose p:empty::before,
+	.lp-prose p > br.ProseMirror-trailingBreak:only-child {
+		content: "";
+	}
+	.lp-prose ul:not([data-type="taskList"]):not([data-task-list]) {
+		list-style: disc;
+		padding-left: 24px;
+	}
+	.lp-prose ol {
+		list-style: decimal;
+		padding-left: 24px;
+	}
+	.lp-prose li > * + * {
+		margin-top: 4px;
+	}
+	.lp-prose li + li {
+		margin-top: 4px;
+	}
+	.lp-prose ul[data-type="taskList"],
+	.lp-prose ul[data-task-list] {
+		list-style: none;
+		padding-left: 0;
+	}
+	.lp-prose ul[data-type="taskList"] li,
+	.lp-prose ul[data-task-list] li {
+		display: flex;
+		align-items: flex-start;
+		gap: 10px;
+	}
+	.lp-prose ul[data-type="taskList"] li > label {
+		display: flex;
+		height: 26px;
+		align-items: center;
+		flex-shrink: 0;
+		cursor: pointer;
+	}
+	.lp-prose ul[data-type="taskList"] li > label input,
+	.lp-task-box {
+		appearance: none;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 16px;
+		height: 16px;
+		margin-top: 5px;
+		flex-shrink: 0;
+		border: 1.5px solid var(--color-rule-strong);
+		border-radius: 4px;
+		background: var(--color-paper);
+		cursor: pointer;
+	}
+	.lp-prose ul[data-type="taskList"] li > label input {
+		margin-top: 0;
+	}
+	/* A finger-sized target around the box, without moving the box. */
+	@media (pointer: coarse) {
+		.lp-prose ul[data-type="taskList"] li > label {
+			height: 40px;
+			width: 40px;
+			margin: -7px -12px -7px -12px;
+			justify-content: center;
+		}
+	}
+	.lp-prose ul[data-type="taskList"] li > label input:checked,
+	li[data-checked="true"] > .lp-task-box {
+		background: var(--color-accent);
+		border-color: var(--color-accent);
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='m2 5.2 2 2 4-4.4' fill='none' stroke='white' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+		background-size: 10px;
+		background-position: center;
+		background-repeat: no-repeat;
+	}
+	.lp-prose ul[data-type="taskList"] li[data-checked="true"] > div,
+	.lp-prose li[data-checked="true"] > div {
+		color: var(--color-pencil);
+		text-decoration: line-through;
+	}
+	.lp-prose ul[data-type="taskList"] li > div,
+	.lp-prose ul[data-task-list] li > div {
+		flex: 1;
+		min-width: 0;
+		margin-top: 0;
+	}
+	.lp-prose blockquote,
+	.lp-quote {
+		border-left: 2px solid var(--color-rule-strong);
+		padding-left: 14px;
+		color: var(--color-graphite);
+	}
+	.lp-prose a {
+		color: var(--color-link);
+		text-decoration: underline;
+		text-underline-offset: 2px;
+	}
+	.lp-prose hr {
+		border: 0;
+		height: 1px;
+		background: var(--color-rule);
+		margin: 18px 0;
+	}
+	.lp-inline-code,
+	.lp-prose :not(pre) > code {
+		font-family: var(--font-mono);
+		font-size: 13.5px;
+		background: var(--color-wash-2);
+		border-radius: 4px;
+		padding: 1px 4px;
+	}
+	.lp-highlight,
+	.lp-prose mark {
+		background: var(--color-amber-soft);
+		color: inherit;
+		border-radius: 2px;
+		padding: 0 1px;
+	}
+	.lp-mention {
+		color: var(--color-link);
+	}
+	.lp-prose pre,
+	.lp-code {
+		font-family: var(--font-mono);
+		font-size: 13px;
+		line-height: 20px;
+		background: var(--color-wash);
+		border: 1px solid var(--color-rule);
+		border-radius: 6px;
+		padding: 12px 14px;
+		overflow-x: auto;
+		margin: 8px 0;
+	}
+	.lp-prose pre code {
+		background: transparent;
+		padding: 0;
+		font-size: inherit;
+	}
+	.lp-code-language {
+		position: absolute;
+		top: 8px;
+		right: 8px;
+		z-index: 1;
+		max-width: 130px;
+		padding: 2px 4px;
+		font-family: var(--font-sans);
+		font-size: 12px;
+		line-height: 18px;
+		color: var(--color-graphite);
+		background: transparent;
+		border: 1px solid transparent;
+		border-radius: 4px;
+		cursor: pointer;
+	}
+	select.lp-code-language:hover,
+	select.lp-code-language:focus-visible {
+		background: var(--color-wash-2);
+		border-color: var(--color-rule-strong);
+	}
+	.lp-code {
+		position: relative;
+	}
+	.hljs-comment,
+	.hljs-quote {
+		color: var(--color-pencil);
+		font-style: italic;
+	}
+	.hljs-keyword,
+	.hljs-selector-tag,
+	.hljs-built_in {
+		color: var(--color-violet);
+	}
+	.hljs-string,
+	.hljs-attr,
+	.hljs-symbol {
+		color: var(--color-green);
+	}
+	.hljs-number,
+	.hljs-literal {
+		color: var(--color-amber);
+	}
+	.hljs-title,
+	.hljs-function {
+		color: var(--color-link);
+	}
+	.lp-callout {
+		display: flex;
+		gap: 10px;
+		align-items: flex-start;
+		background: var(--color-wash);
+		border-radius: 8px;
+		padding: 12px 14px;
+		margin: 8px 0;
+	}
+	.lp-callout-icon {
+		user-select: none;
+		line-height: 26px;
+		cursor: default;
+	}
+	button.lp-callout-icon {
+		cursor: pointer;
+		border-radius: 4px;
+	}
+	button.lp-callout-icon:hover {
+		background: var(--color-wash-2);
+	}
+	.lp-callout-body {
+		flex: 1;
+		min-width: 0;
+	}
+	.lp-toggle {
+		position: relative;
+		padding-left: 22px;
+	}
+	.lp-toggle-chevron {
+		position: absolute;
+		left: 0;
+		top: 5px;
+		display: flex;
+		width: 16px;
+		height: 16px;
+		align-items: center;
+		justify-content: center;
+		color: var(--color-graphite);
+		transition: transform 120ms ease;
+	}
+	.lp-toggle[data-open="true"] > .lp-toggle-chevron {
+		transform: rotate(90deg);
+	}
+	.lp-toggle[data-open="false"] > .lp-toggle-content > .lp-toggle-body {
+		display: none;
+	}
+	.lp-toggle-title {
+		font-weight: 500;
+	}
+	.lp-toggle-static summary {
+		cursor: pointer;
+		font-weight: 500;
+	}
+	.lp-toggle-static > .lp-toggle-body {
+		padding-left: 22px;
+	}
+	/* Tables. The grid and cell spacing are shared by the editor and by read-only pages. */
+	.lp-table-wrap,
+	.lp-prose .tableWrapper {
+		overflow-x: auto;
+	}
+	.lp-table-wrap {
+		margin: 10px 0;
+	}
+	.lp-table {
+		position: relative;
+		margin: 10px 0;
+		padding: 0 26px 26px 0;
+	}
+	.lp-editor[contenteditable="false"] .lp-table {
+		padding: 0;
+	}
+	.lp-prose table {
+		border-collapse: collapse;
+		width: 100%;
+		table-layout: fixed;
+	}
+	.lp-prose td,
+	.lp-prose th {
+		position: relative;
+		border: 1px solid var(--color-rule-strong);
+		padding: 8px 10px;
+		text-align: left;
+		vertical-align: top;
+		font-size: 14px;
+		line-height: 20px;
+		overflow-wrap: anywhere;
+	}
+	.lp-prose th {
+		background: var(--color-wash);
+		color: var(--color-graphite);
+		font-weight: 500;
+	}
+	.lp-prose td > * + *,
+	.lp-prose th > * + * {
+		margin-top: 4px;
+	}
+	.lp-prose .selectedCell {
+		background: var(--color-link-soft);
+	}
+	.lp-prose .selectedCell::after {
+		content: "";
+		position: absolute;
+		inset: -1px;
+		border: 1px solid var(--color-link);
+		pointer-events: none;
+	}
+	.lp-editor.ProseMirror-focused .lp-cell-active {
+		box-shadow: inset 0 0 0 2px var(--color-link);
+	}
+	.lp-editor .column-resize-handle {
+		position: absolute;
+		top: 0;
+		right: -2px;
+		bottom: 0;
+		width: 3px;
+		background: var(--color-link);
+		pointer-events: none;
+		z-index: 1;
+	}
+	.lp-editor.resize-cursor {
+		cursor: col-resize;
+	}
+	.lp-table-add {
+		position: absolute;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--color-pencil);
+		background: var(--color-wash);
+		border-radius: 4px;
+		opacity: 0;
+		transition:
+			opacity 100ms ease,
+			background 100ms ease;
+	}
+	.lp-table-add:hover {
+		background: var(--color-wash-2);
+		color: var(--color-ink);
+	}
+	.lp-table-add:focus-visible {
+		opacity: 1;
+	}
+	.lp-table-add-column {
+		top: 0;
+		right: 0;
+		bottom: 26px;
+		width: 20px;
+	}
+	.lp-table-add-row {
+		left: 0;
+		right: 26px;
+		bottom: 0;
+		height: 20px;
+	}
+	.lp-table:hover > .lp-table-add {
+		opacity: 1;
+	}
+	.lp-editor[contenteditable="false"] .lp-table-add {
+		display: none;
+	}
+	/* No hover on touch: the plus buttons are always there, large enough for a finger. */
+	@media (hover: none) {
+		.lp-table-add {
+			opacity: 1;
+		}
+		.lp-table {
+			padding: 0 34px 34px 0;
+		}
+		.lp-table-add-column {
+			bottom: 34px;
+			width: 28px;
+		}
+		.lp-table-add-row {
+			right: 34px;
+			height: 28px;
+		}
+	}
+	.lp-table-handle {
+		position: absolute;
+		z-index: 2;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--color-graphite);
+		background: var(--color-paper);
+		border: 1px solid var(--color-rule-strong);
+		border-radius: 4px;
+		transform: translate(-50%, -50%);
+	}
+	.lp-table-handle:hover {
+		background: var(--color-wash-2);
+		color: var(--color-ink);
+	}
+	.lp-table-handle-column {
+		width: 28px;
+		height: 14px;
+	}
+	.lp-table-handle-row {
+		width: 14px;
+		height: 28px;
+	}
+	@media (hover: none) {
+		.lp-table-handle-column {
+			width: 40px;
+			height: 22px;
+		}
+		.lp-table-handle-row {
+			width: 22px;
+			height: 40px;
+		}
+	}
+	.lp-image {
+		margin: 8px 0;
+	}
+	.lp-image img {
+		max-width: 100%;
+		border-radius: 6px;
+		display: block;
+	}
+	.lp-image-frame {
+		position: relative;
+		display: inline-block;
+		max-width: 100%;
+	}
+	.lp-image.is-selected .lp-image-frame {
+		outline: 2px solid var(--color-link);
+		border-radius: 6px;
+	}
+	.lp-image-tools {
+		position: absolute;
+		top: 8px;
+		right: 8px;
+		display: none;
+		gap: 4px;
+	}
+	.lp-image-frame:hover .lp-image-tools,
+	.lp-image.is-selected .lp-image-tools {
+		display: flex;
+	}
+	.lp-image-tools button {
+		background: var(--color-paper);
+		color: var(--color-link);
+		border: 1px solid var(--color-rule);
+		border-radius: 6px;
+		padding: 3px 8px;
+		font-size: 13px;
+		font-weight: 500;
+		line-height: 18px;
+	}
+	.lp-image-resize {
+		position: absolute;
+		top: 0;
+		right: -5px;
+		bottom: 0;
+		width: 10px;
+		cursor: ew-resize;
+	}
+	.lp-image-missing {
+		display: flex;
+		height: 120px;
+		align-items: center;
+		justify-content: center;
+		background: var(--color-wash);
+		color: var(--color-pencil);
+		border-radius: 6px;
+		font-size: 14px;
+	}
+	.lp-attachment,
+	.lp-page-link {
+		margin: 6px 0;
+	}
+	.lp-attachment a,
+	.lp-page-link a,
+	.lp-page-link > span {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 7px 10px;
+		border: 1px solid var(--color-rule);
+		border-radius: 6px;
+		color: var(--color-ink);
+		text-decoration: none;
+		font-size: 14px;
+		line-height: 20px;
+	}
+	.lp-attachment a:hover,
+	.lp-page-link a:hover {
+		background: var(--color-wash);
+	}
+	.lp-attachment a > :last-child {
+		margin-left: auto;
+		font-size: 13px;
+	}
+
+	/* Comments */
+	.lp-comment {
+		background: var(--color-violet-soft);
+		border-radius: 2px;
+		cursor: pointer;
+	}
+	.lp-comment-active {
+		background: color-mix(in srgb, var(--color-violet) 22%, transparent);
+	}
+
+	/* Remote carets */
+	.lp-caret {
+		position: relative;
+		margin-left: -1px;
+		margin-right: -1px;
+		border-left: 2px solid;
+		word-break: normal;
+		pointer-events: none;
+	}
+	.lp-caret-label {
+		position: absolute;
+		left: -2px;
+		top: -18px;
+		height: 18px;
+		padding: 0 6px;
+		border-radius: 3px 3px 3px 0;
+		color: #ffffff;
+		font-size: 12px;
+		font-weight: 500;
+		line-height: 18px;
+		white-space: nowrap;
+		user-select: none;
+	}
+
+	/* Editor chrome */
+	.lp-title {
+		font-family: var(--font-serif);
+		font-size: 48px;
+		font-weight: 500;
+		letter-spacing: -0.02em;
+		line-height: 54px;
+		color: var(--color-ink);
+		outline: none;
+	}
+	@media (max-width: 640px) {
+		.lp-title {
+			font-size: 36px;
+			line-height: 42px;
+		}
+	}
+	.lp-title p {
+		margin: 0;
+	}
+	.lp-head-actions {
+		opacity: 0;
+		transition: opacity 120ms ease;
+		margin-top: -22px;
+		height: 22px;
+	}
+	.lp-head-actions.lp-head-actions-beside {
+		margin-top: 0;
+	}
+	.lp-editor-surface:hover ~ .lp-head-actions,
+	div:hover > .lp-head-actions,
+	div:hover > div > .lp-head-actions,
+	.lp-head-actions:focus-within,
+	div:focus-within > .lp-head-actions,
+	div:focus-within > div > .lp-head-actions {
+		opacity: 1;
+	}
+	/* Touch has no hover: these appear while the title is being edited. */
+	@media (hover: none) {
+		.lp-head-actions {
+			margin-top: -32px;
+			height: 32px;
+			pointer-events: none;
+		}
+		div:focus-within > .lp-head-actions,
+		div:focus-within > div > .lp-head-actions {
+			pointer-events: auto;
+		}
+		.lp-head-actions.lp-head-actions-beside {
+			margin-top: 0;
+		}
+	}
+	.lp-editor {
+		outline: none;
+		min-height: 240px;
+	}
+	.lp-editor .lp-ai-ghost-line::before {
+		content: none !important;
+	}
+	.lp-editor > p.is-empty::before,
+	.lp-editor h1.is-empty::before,
+	.lp-editor h2.is-empty::before,
+	.lp-editor h3.is-empty::before,
+	.lp-editor .lp-toggle-title.is-empty::before,
+	.lp-title p.is-empty::before,
+	.lp-title .is-empty::before {
+		content: attr(data-placeholder);
+		color: var(--color-pencil);
+		float: left;
+		height: 0;
+		pointer-events: none;
+	}
+	.lp-editor .lp-callout.is-empty .lp-callout-body::before,
+	.lp-editor .is-empty > .lp-callout .lp-callout-body::before {
+		content: "Type something";
+		color: var(--color-pencil);
+		float: left;
+		height: 0;
+		pointer-events: none;
+	}
+	.lp-drag-handle {
+		position: absolute;
+		left: -28px;
+		display: flex;
+		width: 22px;
+		height: 24px;
+		align-items: center;
+		justify-content: center;
+		color: var(--color-pencil);
+		border-radius: 4px;
+		cursor: grab;
+	}
+	/* Below lg the page gutter is too narrow for the handle, and touch has no hover. */
+	@media (max-width: 1023px) {
+		.lp-drag-handle {
+			display: none;
+		}
+	}
+	.lp-drag-handle:hover {
+		background: var(--color-wash-2);
+	}
+	.lp-block-active {
+		background: var(--color-wash);
+		border-radius: 6px;
+	}
+	.lp-diff {
+		padding: 2px 0;
+	}
+	.lp-diff-added {
+		background: var(--color-green-soft);
+		border-left: 2px solid var(--color-green);
+		padding: 8px 14px;
+		margin: 8px 0;
+	}
+	.lp-diff-removed {
+		background: var(--color-coral-soft);
+		border-left: 2px solid var(--color-coral);
+		padding: 8px 14px;
+		margin: 8px 0;
+		text-decoration: line-through;
+		color: var(--color-graphite);
+	}
+}
