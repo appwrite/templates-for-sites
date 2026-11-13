@@ -24,7 +24,7 @@ importers:
         specifier: ^3.7.4
         version: 3.7.4
       '@astrojs/solid-js':
-        specifier: ^7.1.2
+        specifier: ^7.1.0
         version: 7.1.2(@types/node@24.19.2)(jiti@2.7.0)(solid-js@1.9.17)(yaml@2.9.1)
       '@tailwindcss/typography':
         specifier: ^0.5.20
