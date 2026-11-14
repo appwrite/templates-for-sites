@@ -11,7 +11,7 @@
         "data-generator-retail": "^5.0.0",
         "date-fns": "^3.6.0",
         "echarts": "^6.1.0",
-        "faker": "~5.4.0",
+        "@faker-js/faker": "~5.5.0",
         "inflection": "^3.0.0",
         "query-string": "^9.3.1",
         "ra-appwrite": "^1.0.0",
