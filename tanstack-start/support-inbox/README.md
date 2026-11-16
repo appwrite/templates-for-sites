@@ -128,6 +128,14 @@ npm run dev
 
 Appwrite Realtime only accepts pages from hostnames the project knows. To get live updates on `localhost`, add a Web platform with the hostname `localhost` to the project.
 
+## Tests
+
+```bash
+npm test
+```
+
+The site's tests run the real server code against a local fake of the Appwrite API (`test/fake-appwrite.ts`), so they need no project or key. They cover setup on a new project, on an existing one and on self-hosted Appwrite, sign-in, the tickets API and attachment downloads.
+
 The inbound function has its own tests:
 
 ```bash
@@ -140,4 +148,5 @@ npm test
 
 - `src/routes`: pages, `/setup`, and `POST /api/tickets` (TanStack Start).
 - `src/server`: server code that talks to Appwrite. `schema.server.ts` lists every resource setup creates, `provision.server.ts` holds the setup steps, and `intake.server.ts` files tickets the same way the function files email.
+- `test`: the site's tests, and the fake Appwrite API they run against.
 - `inbound-function`: the function that receives email. The site bundles its code and deploys it, so the template needs nothing outside this folder.
