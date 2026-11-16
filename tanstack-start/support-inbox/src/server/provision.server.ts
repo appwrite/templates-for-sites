@@ -357,13 +357,17 @@ export async function runStep(id: string, polling = false): Promise<{ retry: boo
 
   if (id === 'release') {
     const siteId = process.env.APPWRITE_SITE_ID
-    if (!siteId) return { retry: false }
+    const held = (grantedScopes() ?? []).filter((scope) => SETUP_SCOPES.includes(scope))
+    if (!siteId || !held.length) return { retry: false }
+    // Each request's key carries the scopes from when it started, so the polls
+    // after the update wait for a key that no longer holds the setup scopes.
+    if (polling) return { retry: true }
     const sites = new Sites(adminClient())
     const site = await sites.get({ siteId })
     const kept = site.scopes.filter((scope) => !SETUP_SCOPES.includes(scope))
     // sites.update replaces every setting, so everything else goes back as it was.
     if (kept.length !== site.scopes.length) await sites.update({ ...siteUpdate(site), scopes: kept as never })
-    return { retry: false }
+    return { retry: true }
   }
 
   if (!isCloud()) return { retry: false }
