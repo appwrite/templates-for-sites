@@ -184,15 +184,17 @@ export function ProvisionPanel({
       if (!latest || latest.state === 'ready' || latest.state === 'skipped') continue
       setRunning(step.id)
       try {
-        // Up to about three minutes for a step that keeps building.
-        for (let attempt = 0; attempt < 90 && !cancelled.current; attempt++) {
+        // Function builds can take several minutes on a cold start, so wait up to 10.
+        for (let attempt = 0; attempt < 200 && !cancelled.current; attempt++) {
           const { retry } = await runProvisioningStep({ data: { id: step.id, polling: attempt > 0 } })
           if (!retry) break
-          await sleep(2000)
+          await sleep(3000)
         }
         current = await refresh()
         const after = current.steps.find((item) => item.id === step.id)
         if (after?.state === 'failed') throw new Error(after.detail)
+        // Later steps depend on this one, so stop rather than run them early.
+        if (after?.state === 'working') throw new Error('Appwrite is still working on this. Select Check again in a minute, then continue.')
       } catch (error) {
         setErrors((existing) => ({ ...existing, [step.id]: errorMessage(error) }))
         setRunning(null)
