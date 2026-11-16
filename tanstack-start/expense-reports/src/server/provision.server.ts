@@ -196,7 +196,7 @@ async function inspectResources(): Promise<StepStatus[]> {
   let deployment: StepStatus = { id: 'deployment', label: 'Function code', detail: `Version ${FUNCTION_VERSION}`, state: 'ready' }
   if (!fn) deployment = { ...deployment, state: 'missing' }
   else if (latest && ['waiting', 'processing', 'building'].includes(latest.status)) {
-    deployment = { ...deployment, state: 'working', detail: `Building version ${version?.value ?? FUNCTION_VERSION}` }
+    deployment = { ...deployment, state: 'working', detail: 'Appwrite is building the function' }
   } else if (latest?.status === 'failed' && latest.$id !== fn.deploymentId) {
     deployment = { ...deployment, state: 'failed', detail: 'The last build failed. Check its logs under the function in the Console, then retry.' }
   } else if (!fn.deploymentId) deployment = { ...deployment, state: 'missing' }
@@ -405,15 +405,24 @@ export async function runStep(id: string, polling = false): Promise<{ retry: boo
     const { fn, version, latest } = await functionState()
     if (!fn) throw new Error('Create the receipts function first.')
     if (latest && ['waiting', 'processing', 'building'].includes(latest.status)) return { retry: true }
-    if (polling && latest?.status === 'failed') {
-      throw new Error('The function build failed. Open the function’s deployments in the Appwrite Console for the build logs.')
+    if (polling) {
+      // A poll only watches the build it started; it never starts another one.
+      if (latest?.status === 'failed') {
+        throw new Error('The function build failed. Open the function’s deployments in the Appwrite Console for the build logs.')
+      }
+      if (latest?.status === 'ready' && latest.$id !== fn.deploymentId) {
+        await functions.updateFunctionDeployment({ functionId: fn.$id, deploymentId: latest.$id })
+      }
+      return { retry: false }
     }
     if (fn.deploymentId && version?.value === FUNCTION_VERSION && latest?.status !== 'failed') return { retry: false }
 
-    if (version) {
-      await functions.updateVariable({ functionId: fn.$id, variableId: version.$id, key: VERSION_VARIABLE, value: FUNCTION_VERSION })
+    // Not secret, so the next check can read which version is deployed.
+    if (version?.secret) await functions.deleteVariable({ functionId: fn.$id, variableId: version.$id })
+    if (version && !version.secret) {
+      await functions.updateVariable({ functionId: fn.$id, variableId: version.$id, key: VERSION_VARIABLE, value: FUNCTION_VERSION, secret: false })
     } else {
-      await functions.createVariable({ functionId: fn.$id, variableId: ID.unique(), key: VERSION_VARIABLE, value: FUNCTION_VERSION })
+      await functions.createVariable({ functionId: fn.$id, variableId: ID.unique(), key: VERSION_VARIABLE, value: FUNCTION_VERSION, secret: false })
     }
     await functions.createDeployment({
       functionId: fn.$id,
