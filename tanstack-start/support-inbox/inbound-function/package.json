@@ -1,0 +1,14 @@
+{
+  "name": "mailroom-inbound",
+  "version": "1.0.0",
+  "description": "Receives support email through the Appwrite Functions email trigger and files it into Mailroom.",
+  "private": true,
+  "type": "module",
+  "main": "src/main.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "node-appwrite": "31.1.0"
+  }
+}
