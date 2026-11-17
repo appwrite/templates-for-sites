@@ -1,0 +1,14 @@
+{
+  "name": "outlay-receipts",
+  "version": "1.0.0",
+  "description": "Turns receipts forwarded by email into draft expenses in Outlay.",
+  "private": true,
+  "type": "module",
+  "main": "src/main.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "node-appwrite": "31.1.0"
+  }
+}
