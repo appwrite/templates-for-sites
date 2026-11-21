@@ -11,7 +11,7 @@
         "data-generator-retail": "^5.0.0",
         "date-fns": "^3.6.0",
         "echarts": "^6.1.0",
-        "faker": "~5.4.0",
+        "faker": "~5.5.0",
         "inflection": "^3.0.0",
         "query-string": "^9.3.1",
         "ra-appwrite": "^1.0.0",
@@ -28,7 +28,7 @@
         "react-router-dom": "^7.18.4"
     },
     "devDependencies": {
-        "@types/faker": "~5.1.7",
+        "@types/faker": "~5.5.0",
         "@types/node": "^20.10.7",
         "@types/react": "^19.0.0",
         "@types/react-dom": "^19.0.0",
