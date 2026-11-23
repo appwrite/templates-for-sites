@@ -30,7 +30,7 @@
     "sharp": "^0.35.5"
   },
   "devDependencies": {
-    "@csstools/postcss-global-data": "^2.1.1",
+    "@csstools/postcss-global-data": "^4.0.0",
     "@types/cookie": "^0.6.0",
     "@types/node": "^20",
     "@types/react": "^19",
